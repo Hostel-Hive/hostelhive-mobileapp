@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'core/placeholder_home.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
-class HostelHiveApp extends StatelessWidget {
+class HostelHiveApp extends ConsumerWidget {
   const HostelHiveApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'HostelHive',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const PlaceholderHome(),
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }
