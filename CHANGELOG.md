@@ -16,10 +16,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Formatting helpers for durations and relative times.
 - Authentication screens: sign in, first-login password activation, forgot and reset password, and a password updated confirmation.
 - Router with session-aware redirects (signed-out students go to login, first-time students must set a password).
-- Placeholder home screen with sign out until the dashboard is built.
 - My QR screen showing the student's unique QR code, and full-screen gate scan result screens for success and failure.
 - Passes: yearly usage and Active, Pending and History tabs, pass detail with warden note and cancel, request late access with date and time pickers, and a going home flow with confirmations.
 - Date and time formatting helpers and an injectable clock for deterministic tests.
 - Complaints: report an issue with category, severity, title, description and up to five JPG or PNG photos (camera or gallery, 5 MB limit), a confirmation with the ticket ID, and a complaint detail with progress and updates.
 - Inbox: announcements and alerts with All, Announcements and Alerts tabs, unread banner and dots, mark all as read, empty states, and a message detail that marks the message read.
 - Profile (Me): student details with room, guardian and contact information, a shortcut to the QR code, and sign out with confirmation.
+- Home dashboard with greeting, in/out status, curfew countdown, quick actions and the active request, inside a bottom navigation shell (Home, Passes, Inbox, Me) with an unread dot on Inbox.

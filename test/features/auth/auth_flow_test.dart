@@ -5,8 +5,12 @@ import 'package:hostelhive_mobile/app.dart';
 import 'package:hostelhive_mobile/core/router/app_router.dart';
 import 'package:hostelhive_mobile/core/widgets/primary_button.dart';
 import 'package:hostelhive_mobile/data/repositories/auth_repository.dart';
+import 'package:hostelhive_mobile/data/repositories/inbox_repository.dart';
+import 'package:hostelhive_mobile/data/repositories/pass_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/session_store.dart';
 import 'package:hostelhive_mobile/features/auth/providers/auth_providers.dart';
+import 'package:hostelhive_mobile/features/inbox/providers/inbox_providers.dart';
+import 'package:hostelhive_mobile/features/passes/providers/pass_providers.dart';
 
 Future<MemorySessionStore> pumpApp(
   WidgetTester tester, {
@@ -24,6 +28,12 @@ Future<MemorySessionStore> pumpApp(
       overrides: [
         authRepositoryProvider.overrideWithValue(
           MockAuthRepository(store: store, latency: Duration.zero),
+        ),
+        passRepositoryProvider.overrideWithValue(
+          MockPassRepository(latency: Duration.zero),
+        ),
+        inboxRepositoryProvider.overrideWithValue(
+          MockInboxRepository(latency: Duration.zero),
         ),
       ],
       child: const HostelHiveApp(),
@@ -127,7 +137,11 @@ void main() {
     ) async {
       final store = await pumpApp(tester, signedInAs: 'STU-0036');
 
+      await tester.tap(find.text('Me'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Sign out'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sign out').last);
       await tester.pumpAndSettle();
 
       expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);

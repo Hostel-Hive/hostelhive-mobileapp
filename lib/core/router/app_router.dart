@@ -13,6 +13,7 @@ import '../../features/complaints/screens/complaint_detail_screen.dart';
 import '../../features/complaints/screens/complaint_submitted_screen.dart';
 import '../../features/complaints/screens/submit_complaint_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/home/screens/home_shell.dart';
 import '../../features/inbox/screens/announcement_detail_screen.dart';
 import '../../features/inbox/screens/inbox_screen.dart';
 import '../../features/passes/screens/going_home_screen.dart';
@@ -82,7 +83,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.listen<AuthState>(authControllerProvider, (_, _) => refresh.refresh());
   ref.onDispose(refresh.dispose);
 
+  final rootKey = GlobalKey<NavigatorState>();
+
   return GoRouter(
+    navigatorKey: rootKey,
     initialLocation: AppRoutes.login,
     refreshListenable: refresh,
     redirect: (context, state) => authRedirect(
@@ -114,28 +118,62 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.passwordChanged,
         builder: (context, state) => const PasswordChangedScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.home,
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.passes,
-        builder: (context, state) => const PassesScreen(),
-        routes: [
-          GoRoute(
-            path: 'request',
-            builder: (context, state) => const RequestLateAccessScreen(),
-          ),
-          GoRoute(
-            path: ':id',
-            builder: (context, state) =>
-                PassDetailScreen(passId: state.pathParameters['id']!),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            HomeShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
             routes: [
               GoRoute(
-                path: 'submitted',
-                builder: (context, state) => LateAccessSubmittedScreen(
-                  passId: state.pathParameters['id']!,
-                ),
+                path: AppRoutes.home,
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.passes,
+                builder: (context, state) => const PassesScreen(),
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: rootKey,
+                    path: 'request',
+                    builder: (context, state) =>
+                        const RequestLateAccessScreen(),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: rootKey,
+                    path: ':id',
+                    builder: (context, state) =>
+                        PassDetailScreen(passId: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        parentNavigatorKey: rootKey,
+                        path: 'submitted',
+                        builder: (context, state) => LateAccessSubmittedScreen(
+                          passId: state.pathParameters['id']!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.inbox,
+                builder: (context, state) => const InboxScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.profile,
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),
@@ -169,14 +207,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/complaints/:id/submitted',
         builder: (context, state) =>
             ComplaintSubmittedScreen(complaintId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: AppRoutes.profile,
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.inbox,
-        builder: (context, state) => const InboxScreen(),
       ),
       GoRoute(
         path: '/inbox/:id',
