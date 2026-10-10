@@ -22,3 +22,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Date and time formatting helpers and an injectable clock for deterministic tests.
 - Complaints: report an issue with category, severity, title, description and up to five JPG or PNG photos (camera or gallery, 5 MB limit), a confirmation with the ticket ID, and a complaint detail with progress and updates.
 - Inbox: announcements and alerts with All, Announcements and Alerts tabs, unread banner and dots, mark all as read, empty states, and a message detail that marks the message read.
+- Profile (Me): student details with room, guardian and contact information, a shortcut to the QR code, and sign out with confirmation.
