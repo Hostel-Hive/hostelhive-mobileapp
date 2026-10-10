@@ -15,6 +15,7 @@ class AppTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.maxLines = 1,
     this.enabled = true,
+    this.labelColor = AppColors.muted,
     super.key,
   });
 
@@ -29,6 +30,7 @@ class AppTextField extends StatefulWidget {
   final ValueChanged<String>? onFieldSubmitted;
   final int maxLines;
   final bool enabled;
+  final Color labelColor;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -51,8 +53,8 @@ class _AppTextFieldState extends State<AppTextField> {
       children: [
         Text(
           widget.label.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.muted,
+          style: TextStyle(
+            color: widget.labelColor,
             fontSize: 11,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.8,

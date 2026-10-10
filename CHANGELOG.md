@@ -14,3 +14,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Password strength and form validation utilities, with unit and widget tests.
 - Data layer: typed models for students, passes, complaints and inbox items, abstract repositories with in-memory mock implementations, and secure session token storage.
 - Formatting helpers for durations and relative times.
+- Authentication screens: sign in, first-login password activation, forgot and reset password, and a password updated confirmation.
+- Router with session-aware redirects (signed-out students go to login, first-time students must set a password).
+- Placeholder home screen with sign out until the dashboard is built.
