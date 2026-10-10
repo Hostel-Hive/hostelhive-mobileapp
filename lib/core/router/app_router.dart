@@ -13,6 +13,8 @@ import '../../features/complaints/screens/complaint_detail_screen.dart';
 import '../../features/complaints/screens/complaint_submitted_screen.dart';
 import '../../features/complaints/screens/submit_complaint_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/inbox/screens/announcement_detail_screen.dart';
+import '../../features/inbox/screens/inbox_screen.dart';
 import '../../features/passes/screens/going_home_screen.dart';
 import '../../features/passes/screens/pass_confirmation_screens.dart';
 import '../../features/passes/screens/pass_detail_screen.dart';
@@ -35,6 +37,7 @@ class AppRoutes {
   static const requestLateAccess = '/passes/request';
   static const goingHome = '/going-home';
   static const goingHomeRecorded = '/going-home/recorded';
+  static const inbox = '/inbox';
   static const newComplaint = '/complaints/new';
   static const qr = '/qr';
   static const scanResult = '/scan-result';
@@ -164,6 +167,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/complaints/:id/submitted',
         builder: (context, state) =>
             ComplaintSubmittedScreen(complaintId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.inbox,
+        builder: (context, state) => const InboxScreen(),
+      ),
+      GoRoute(
+        path: '/inbox/:id',
+        builder: (context, state) =>
+            AnnouncementDetailScreen(itemId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutes.qr,
