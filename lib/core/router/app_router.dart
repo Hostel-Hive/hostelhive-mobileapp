@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,9 @@ import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/password_changed_screen.dart';
 import '../../features/auth/screens/reset_password_screen.dart';
+import '../../features/complaints/screens/complaint_detail_screen.dart';
+import '../../features/complaints/screens/complaint_submitted_screen.dart';
+import '../../features/complaints/screens/submit_complaint_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/passes/screens/going_home_screen.dart';
 import '../../features/passes/screens/pass_confirmation_screens.dart';
@@ -33,6 +35,7 @@ class AppRoutes {
   static const requestLateAccess = '/passes/request';
   static const goingHome = '/going-home';
   static const goingHomeRecorded = '/going-home/recorded';
+  static const newComplaint = '/complaints/new';
   static const qr = '/qr';
   static const scanResult = '/scan-result';
 
@@ -142,6 +145,25 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const GoingHomeRecordedScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/complaints',
+        redirect: (context, state) => AppRoutes.home,
+        builder: (context, state) => const SizedBox.shrink(),
+      ),
+      GoRoute(
+        path: AppRoutes.newComplaint,
+        builder: (context, state) => const SubmitComplaintScreen(),
+      ),
+      GoRoute(
+        path: '/complaints/:id',
+        builder: (context, state) =>
+            ComplaintDetailScreen(complaintId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/complaints/:id/submitted',
+        builder: (context, state) =>
+            ComplaintSubmittedScreen(complaintId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: AppRoutes.qr,
