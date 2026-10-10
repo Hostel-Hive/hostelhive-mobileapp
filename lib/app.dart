@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/placeholder_home.dart';
+import 'core/theme/app_theme.dart';
 
 class HostelHiveApp extends StatelessWidget {
   const HostelHiveApp({super.key});
@@ -10,10 +11,7 @@ class HostelHiveApp extends StatelessWidget {
     return MaterialApp(
       title: 'HostelHive',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00A8F0)),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: const PlaceholderHome(),
     );
   }
