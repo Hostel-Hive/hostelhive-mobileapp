@@ -11,6 +11,9 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/password_changed_screen.dart';
 import '../../features/auth/screens/reset_password_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/qr/models/scan_result.dart';
+import '../../features/qr/screens/my_qr_screen.dart';
+import '../../features/qr/screens/scan_result_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -21,6 +24,8 @@ class AppRoutes {
   static const resetPassword = '/reset-password';
   static const passwordChanged = '/password-changed';
   static const home = '/home';
+  static const qr = '/qr';
+  static const scanResult = '/scan-result';
 
   /// Screens a signed-out student may open.
   static const publicRoutes = {
@@ -95,6 +100,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.qr,
+        builder: (context, state) => const MyQrScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.scanResult,
+        redirect: (context, state) =>
+            state.extra is ScanResult ? null : AppRoutes.home,
+        builder: (context, state) =>
+            ScanResultScreen(result: state.extra! as ScanResult),
       ),
     ],
   );
