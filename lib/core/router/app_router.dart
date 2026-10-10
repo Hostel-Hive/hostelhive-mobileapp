@@ -20,6 +20,7 @@ import '../../features/passes/screens/pass_confirmation_screens.dart';
 import '../../features/passes/screens/pass_detail_screen.dart';
 import '../../features/passes/screens/passes_screen.dart';
 import '../../features/passes/screens/request_late_access_screen.dart';
+import '../../features/profile/screens/profile_screen.dart';
 import '../../features/qr/models/scan_result.dart';
 import '../../features/qr/screens/my_qr_screen.dart';
 import '../../features/qr/screens/scan_result_screen.dart';
@@ -38,6 +39,7 @@ class AppRoutes {
   static const goingHome = '/going-home';
   static const goingHomeRecorded = '/going-home/recorded';
   static const inbox = '/inbox';
+  static const profile = '/profile';
   static const newComplaint = '/complaints/new';
   static const qr = '/qr';
   static const scanResult = '/scan-result';
@@ -167,6 +169,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/complaints/:id/submitted',
         builder: (context, state) =>
             ComplaintSubmittedScreen(complaintId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: AppRoutes.inbox,
