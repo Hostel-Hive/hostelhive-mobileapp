@@ -23,3 +23,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Inbox: announcements and alerts with All, Announcements and Alerts tabs, unread banner and dots, mark all as read, empty states, and a message detail that marks the message read.
 - Profile (Me): student details with room, guardian and contact information, a shortcut to the QR code, and sign out with confirmation.
 - Home dashboard with greeting, in/out status, curfew countdown, quick actions and the active request, inside a bottom navigation shell (Home, Passes, Inbox, Me) with an unread dot on Inbox.
+
+### Fixed
+- Hero cards on Home, Me and first sign-in rendered pale blue on devices instead of navy with a subtle glow.

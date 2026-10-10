@@ -219,7 +219,7 @@ class _StatusCard extends StatelessWidget {
         gradient: const RadialGradient(
           center: Alignment(0.3, -0.2),
           radius: 0.9,
-          colors: [Color(0x2600AEEF), AppColors.navy],
+          colors: [AppColors.navyGlow, AppColors.navy],
         ),
         color: AppColors.navy,
         borderRadius: BorderRadius.circular(28),
