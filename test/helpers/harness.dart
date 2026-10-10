@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:hostelhive_mobile/app.dart';
 import 'package:hostelhive_mobile/core/providers/clock_provider.dart';
 import 'package:hostelhive_mobile/data/repositories/auth_repository.dart';
+import 'package:hostelhive_mobile/data/repositories/complaint_repository.dart';
+import 'package:hostelhive_mobile/data/repositories/inbox_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/pass_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/session_store.dart';
 import 'package:hostelhive_mobile/features/auth/providers/auth_providers.dart';
+import 'package:hostelhive_mobile/features/complaints/providers/complaint_providers.dart';
+import 'package:hostelhive_mobile/features/inbox/providers/inbox_providers.dart';
 import 'package:hostelhive_mobile/features/passes/providers/pass_providers.dart';
 
 /// The moment every harness test treats as "now": Sat 18 Apr 2026, 21:14.
@@ -37,6 +41,12 @@ Future<void> pumpApp(
         ),
         passRepositoryProvider.overrideWithValue(
           MockPassRepository(clock: () => clock, latency: Duration.zero),
+        ),
+        complaintRepositoryProvider.overrideWithValue(
+          MockComplaintRepository(clock: () => clock, latency: Duration.zero),
+        ),
+        inboxRepositoryProvider.overrideWithValue(
+          MockInboxRepository(clock: () => clock, latency: Duration.zero),
         ),
         ...overrides,
       ],

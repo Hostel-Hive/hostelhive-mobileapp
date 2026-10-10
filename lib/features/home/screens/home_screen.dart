@@ -55,6 +55,11 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               PrimaryButton(
+                label: 'Inbox',
+                onPressed: () => context.push(AppRoutes.inbox),
+              ),
+              const SizedBox(height: 12),
+              PrimaryButton(
                 label: 'Sign out',
                 isOutlined: true,
                 onPressed: () =>
