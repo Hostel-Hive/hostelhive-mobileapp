@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelhive_mobile/core/router/app_router.dart';
@@ -146,7 +146,10 @@ void main() {
       await pumpApp(tester);
       await goTo(tester, AppRoutes.inbox);
 
-      expect(find.text('Inbox'), findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: find.text('Inbox')),
+        findsOneWidget,
+      );
       expect(
         find.text('3 new messages since you last checked'),
         findsOneWidget,

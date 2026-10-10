@@ -5,8 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hostelhive_mobile/app.dart';
 import 'package:hostelhive_mobile/core/router/app_router.dart';
 import 'package:hostelhive_mobile/data/repositories/auth_repository.dart';
+import 'package:hostelhive_mobile/data/repositories/inbox_repository.dart';
+import 'package:hostelhive_mobile/data/repositories/pass_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/session_store.dart';
 import 'package:hostelhive_mobile/features/auth/providers/auth_providers.dart';
+import 'package:hostelhive_mobile/features/inbox/providers/inbox_providers.dart';
+import 'package:hostelhive_mobile/features/passes/providers/pass_providers.dart';
 import 'package:hostelhive_mobile/features/qr/models/scan_result.dart';
 import 'package:hostelhive_mobile/features/qr/screens/my_qr_screen.dart';
 import 'package:hostelhive_mobile/features/qr/screens/scan_result_screen.dart';
@@ -38,6 +42,12 @@ Future<void> pumpApp(WidgetTester tester, {String? signedInAs}) async {
       overrides: [
         authRepositoryProvider.overrideWithValue(
           MockAuthRepository(store: store, latency: Duration.zero),
+        ),
+        passRepositoryProvider.overrideWithValue(
+          MockPassRepository(latency: Duration.zero),
+        ),
+        inboxRepositoryProvider.overrideWithValue(
+          MockInboxRepository(latency: Duration.zero),
         ),
       ],
       child: const HostelHiveApp(),

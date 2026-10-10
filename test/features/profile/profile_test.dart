@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelhive_mobile/core/router/app_router.dart';
 import 'package:hostelhive_mobile/features/qr/screens/my_qr_screen.dart';
@@ -12,7 +13,10 @@ void main() {
       await pumpApp(tester);
       await goTo(tester, AppRoutes.profile);
 
-      expect(find.text('Me'), findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(AppBar), matching: find.text('Me')),
+        findsOneWidget,
+      );
       expect(find.text('Sanuthi Perera'), findsOneWidget);
       expect(find.text('SP'), findsOneWidget);
       expect(find.text('SE/2021/036'), findsOneWidget);
