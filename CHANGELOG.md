@@ -9,3 +9,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Flutter project structure for Android and iOS with `flutter_lints` and a Riverpod-based placeholder home screen.
 - GitHub Actions CI pipeline (format, analyze, tests with an 80% coverage gate, APK build, dependency scan).
 - Dependabot configuration, pull request template, `.env.example`, README and contribution guide.
+- Design tokens, `AppTheme` and bundled Plus Jakarta Sans and JetBrains Mono fonts matching the Figma student frames.
+- Shared widgets: primary button, text field, app bar, status badge, category pill, info box, password strength meter and checklist, empty state, usage ring and confirmation screen.
+- Password strength and form validation utilities, with unit and widget tests.
