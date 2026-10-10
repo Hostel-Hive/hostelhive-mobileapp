@@ -145,7 +145,7 @@ class _Hero extends StatelessWidget {
         gradient: RadialGradient(
           center: Alignment(-0.6, 0.7),
           radius: 0.6,
-          colors: [Color(0x3300AEEF), AppColors.navy],
+          colors: [AppColors.navyGlow, AppColors.navy],
           stops: [0, 1],
         ),
       ),

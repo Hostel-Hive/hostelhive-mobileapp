@@ -118,7 +118,7 @@ class _Hero extends StatelessWidget {
         gradient: const RadialGradient(
           center: Alignment(0, -0.6),
           radius: 0.9,
-          colors: [Color(0x3300AEEF), AppColors.navy],
+          colors: [AppColors.navyGlow, AppColors.navy],
         ),
         color: AppColors.navy,
         borderRadius: BorderRadius.circular(28),

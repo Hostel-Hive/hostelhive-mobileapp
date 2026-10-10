@@ -6,6 +6,9 @@ class AppColors {
 
   static const Color navy = Color(0xFF181037);
   static const Color cyan = Color(0xFF00AEEF);
+
+  /// Navy with a 20% cyan tint, used as the centre of the hero card glow.
+  static const Color navyGlow = Color(0xFF13305C);
   static const Color cyanSoft = Color(0x2900AEEF);
 
   static const Color background = Color(0xFFF7F8FB);
