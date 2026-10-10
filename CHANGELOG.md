@@ -20,3 +20,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - My QR screen showing the student's unique QR code, and full-screen gate scan result screens for success and failure.
 - Passes: yearly usage and Active, Pending and History tabs, pass detail with warden note and cancel, request late access with date and time pickers, and a going home flow with confirmations.
 - Date and time formatting helpers and an injectable clock for deterministic tests.
+- Complaints: report an issue with category, severity, title, description and up to five JPG or PNG photos (camera or gallery, 5 MB limit), a confirmation with the ticket ID, and a complaint detail with progress and updates.

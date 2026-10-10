@@ -50,6 +50,11 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               PrimaryButton(
+                label: 'Report an issue',
+                onPressed: () => context.push(AppRoutes.newComplaint),
+              ),
+              const SizedBox(height: 12),
+              PrimaryButton(
                 label: 'Sign out',
                 isOutlined: true,
                 onPressed: () =>
