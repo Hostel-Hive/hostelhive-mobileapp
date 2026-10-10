@@ -20,6 +20,35 @@ String formatDuration(Duration duration) {
   return unit(minutes, 'minute');
 }
 
+const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const _months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String _two(int value) => value.toString().padLeft(2, '0');
+
+/// "Fri 19 Apr".
+String formatDayMonth(DateTime time) =>
+    '${_weekdays[time.weekday - 1]} ${time.day} ${_months[time.month - 1]}';
+
+/// "19 Apr 2026".
+String formatDate(DateTime time) =>
+    '${time.day} ${_months[time.month - 1]} ${time.year}';
+
+/// 24-hour time such as "09:00".
+String formatTime(DateTime time) => '${_two(time.hour)}:${_two(time.minute)}';
+
 /// "just now", "22m ago", "4h ago", "Yesterday", "4d ago", "2w ago".
 String relativeTime(DateTime time, {DateTime? now}) {
   final difference = (now ?? DateTime.now()).difference(time);

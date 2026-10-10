@@ -11,6 +11,11 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/password_changed_screen.dart';
 import '../../features/auth/screens/reset_password_screen.dart';
 import '../../features/home/screens/home_screen.dart';
+import '../../features/passes/screens/going_home_screen.dart';
+import '../../features/passes/screens/pass_confirmation_screens.dart';
+import '../../features/passes/screens/pass_detail_screen.dart';
+import '../../features/passes/screens/passes_screen.dart';
+import '../../features/passes/screens/request_late_access_screen.dart';
 import '../../features/qr/models/scan_result.dart';
 import '../../features/qr/screens/my_qr_screen.dart';
 import '../../features/qr/screens/scan_result_screen.dart';
@@ -24,6 +29,10 @@ class AppRoutes {
   static const resetPassword = '/reset-password';
   static const passwordChanged = '/password-changed';
   static const home = '/home';
+  static const passes = '/passes';
+  static const requestLateAccess = '/passes/request';
+  static const goingHome = '/going-home';
+  static const goingHomeRecorded = '/going-home/recorded';
   static const qr = '/qr';
   static const scanResult = '/scan-result';
 
@@ -100,6 +109,39 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.passes,
+        builder: (context, state) => const PassesScreen(),
+        routes: [
+          GoRoute(
+            path: 'request',
+            builder: (context, state) => const RequestLateAccessScreen(),
+          ),
+          GoRoute(
+            path: ':id',
+            builder: (context, state) =>
+                PassDetailScreen(passId: state.pathParameters['id']!),
+            routes: [
+              GoRoute(
+                path: 'submitted',
+                builder: (context, state) => LateAccessSubmittedScreen(
+                  passId: state.pathParameters['id']!,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: AppRoutes.goingHome,
+        builder: (context, state) => const GoingHomeScreen(),
+        routes: [
+          GoRoute(
+            path: 'recorded',
+            builder: (context, state) => const GoingHomeRecordedScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoutes.qr,
