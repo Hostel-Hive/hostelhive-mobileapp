@@ -87,4 +87,21 @@ void main() {
       expect(relativeTime(DateTime.now()), 'just now');
     });
   });
+
+  group('date and time formatting', () {
+    final time = DateTime(2026, 4, 19, 9, 5);
+
+    test('formatDayMonth shows the weekday, day and month', () {
+      expect(formatDayMonth(time), 'Sun 19 Apr');
+    });
+
+    test('formatDate shows the day, month and year', () {
+      expect(formatDate(time), '19 Apr 2026');
+    });
+
+    test('formatTime pads hours and minutes', () {
+      expect(formatTime(time), '09:05');
+      expect(formatTime(DateTime(2026, 1, 1, 21, 14)), '21:14');
+    });
+  });
 }

@@ -6,12 +6,14 @@ class UsageProgressCircle extends StatelessWidget {
   const UsageProgressCircle({
     required this.percentage,
     this.size = 56,
+    this.color = AppColors.cyan,
     super.key,
   });
 
   /// Value between 0 and 1.
   final double percentage;
   final double size;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class UsageProgressCircle extends StatelessWidget {
               value: value,
               strokeWidth: 5,
               backgroundColor: AppColors.border,
-              color: AppColors.cyan,
+              color: color,
               strokeCap: StrokeCap.round,
             ),
           ),
