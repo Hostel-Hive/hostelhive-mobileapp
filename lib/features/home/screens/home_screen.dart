@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -32,6 +34,11 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 24),
+              PrimaryButton(
+                label: 'Show my QR',
+                onPressed: () => context.push(AppRoutes.qr),
+              ),
+              const SizedBox(height: 12),
               PrimaryButton(
                 label: 'Sign out',
                 isOutlined: true,

@@ -17,3 +17,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Authentication screens: sign in, first-login password activation, forgot and reset password, and a password updated confirmation.
 - Router with session-aware redirects (signed-out students go to login, first-time students must set a password).
 - Placeholder home screen with sign out until the dashboard is built.
+- My QR screen showing the student's unique QR code, and full-screen gate scan result screens for success and failure.
