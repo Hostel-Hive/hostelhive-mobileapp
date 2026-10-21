@@ -6,7 +6,6 @@ abstract class InboxRepository {
   Future<List<InboxItem>> fetchItems();
   Future<InboxItem> fetchItem(String id);
   Future<void> markAsRead(String id);
-  Future<void> markAllAsRead();
 }
 
 class MockInboxRepository implements InboxRepository {
@@ -91,12 +90,5 @@ class MockInboxRepository implements InboxRepository {
     final index = _items.indexWhere((item) => item.id == id);
     if (index == -1) return;
     _items[index] = _items[index].copyWith(isRead: true);
-  }
-
-  @override
-  Future<void> markAllAsRead() async {
-    for (var i = 0; i < _items.length; i++) {
-      _items[i] = _items[i].copyWith(isRead: true);
-    }
   }
 }
