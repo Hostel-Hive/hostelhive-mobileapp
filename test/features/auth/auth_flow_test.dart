@@ -87,7 +87,7 @@ void main() {
     ) async {
       await pumpApp(tester);
 
-      expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);
+      expect(find.text('EMAIL'), findsOneWidget);
       expect(find.text('Sign in'), findsOneWidget);
     });
 
@@ -99,7 +99,7 @@ void main() {
         await tester.tap(find.widgetWithText(PrimaryButton, 'Sign in'));
         await tester.pump();
 
-        expect(find.text('Email or student ID is required'), findsOneWidget);
+        expect(find.text('Email is required'), findsOneWidget);
         expect(find.text('Password is required'), findsOneWidget);
       },
     );
@@ -109,10 +109,10 @@ void main() {
       (tester) async {
         await pumpApp(tester);
 
-        await fillAndSubmitLogin(tester, 'SE/2021/036', 'wrong');
+        await fillAndSubmitLogin(tester, 'sanuthi.p@stu.kln.ac.lk', 'wrong');
 
         expect(find.text('Incorrect email/ID or password.'), findsOneWidget);
-        expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);
+        expect(find.text('EMAIL'), findsOneWidget);
       },
     );
 
@@ -121,7 +121,7 @@ void main() {
     ) async {
       await pumpApp(tester);
 
-      await fillAndSubmitLogin(tester, 'SE/2021/036', 'Hostel@123');
+      await fillAndSubmitLogin(tester, 'sanuthi.p@stu.kln.ac.lk', 'Hostel@123');
 
       expect(find.text('Hello, Sanuthi'), findsOneWidget);
     });
@@ -144,7 +144,7 @@ void main() {
       await tester.tap(find.text('Sign out').last);
       await tester.pumpAndSettle();
 
-      expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);
+      expect(find.text('EMAIL'), findsOneWidget);
       expect(await store.read(), isNull);
     });
 
@@ -156,7 +156,7 @@ void main() {
         await tester.tap(find.text('Check your welcome email'));
         await tester.pump();
 
-        expect(find.textContaining('temporary password'), findsOneWidget);
+        expect(find.textContaining('choose your password'), findsOneWidget);
       },
     );
   });
@@ -167,7 +167,7 @@ void main() {
       (tester) async {
         await pumpApp(tester);
 
-        await fillAndSubmitLogin(tester, 'SE/2022/101', 'Temp@1234');
+        await fillAndSubmitLogin(tester, 'nethmi.s@stu.kln.ac.lk', 'Temp@1234');
 
         expect(find.text('FIRST LOGIN · SE/2022/101'), findsOneWidget);
         expect(find.text('Nethmi.'), findsOneWidget);
@@ -176,7 +176,7 @@ void main() {
 
     testWidgets('given a weak password, then it is rejected', (tester) async {
       await pumpApp(tester);
-      await fillAndSubmitLogin(tester, 'SE/2022/101', 'Temp@1234');
+      await fillAndSubmitLogin(tester, 'nethmi.s@stu.kln.ac.lk', 'Temp@1234');
 
       await tester.enterText(find.byType(TextFormField).at(0), 'password');
       await tester.enterText(find.byType(TextFormField).at(1), 'password');
@@ -193,7 +193,7 @@ void main() {
       tester,
     ) async {
       await pumpApp(tester);
-      await fillAndSubmitLogin(tester, 'SE/2022/101', 'Temp@1234');
+      await fillAndSubmitLogin(tester, 'nethmi.s@stu.kln.ac.lk', 'Temp@1234');
 
       await tester.enterText(find.byType(TextFormField).at(0), 'Brand#New9');
       await tester.enterText(find.byType(TextFormField).at(1), 'Different#1');
@@ -207,7 +207,7 @@ void main() {
       'given a strong matching password, then the account is activated',
       (tester) async {
         await pumpApp(tester);
-        await fillAndSubmitLogin(tester, 'SE/2022/101', 'Temp@1234');
+        await fillAndSubmitLogin(tester, 'nethmi.s@stu.kln.ac.lk', 'Temp@1234');
 
         await tester.enterText(find.byType(TextFormField).at(0), 'Brand#New9');
         await tester.pump();
@@ -280,7 +280,7 @@ void main() {
       await tester.tap(find.text('Try signing in again'));
       await tester.pumpAndSettle();
 
-      expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);
+      expect(find.text('EMAIL'), findsOneWidget);
     });
 
     testWidgets('given the back button, then it returns to login', (
@@ -291,7 +291,7 @@ void main() {
       await tester.tap(find.byTooltip('Back to sign in'));
       await tester.pumpAndSettle();
 
-      expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);
+      expect(find.text('EMAIL'), findsOneWidget);
     });
 
     testWidgets(
@@ -323,7 +323,7 @@ void main() {
 
         await tester.tap(find.text('Back to sign in'));
         await tester.pumpAndSettle();
-        expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);
+        expect(find.text('EMAIL'), findsOneWidget);
       },
     );
   });

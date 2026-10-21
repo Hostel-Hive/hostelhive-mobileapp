@@ -1,15 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
+import '../../../data/api/api_providers.dart';
 import '../../../data/models/student.dart';
+import '../../../data/repositories/api_auth_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/exceptions.dart';
-import '../../../data/repositories/session_store.dart';
 
-final sessionStoreProvider = Provider<SessionStore>((ref) {
-  return SecureSessionStore();
-});
+export '../../../data/api/api_providers.dart' show sessionStoreProvider;
 
+/// The real backend when `API_BASE_URL` and `FIREBASE_API_KEY` are set,
+/// otherwise the built-in demo accounts.
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  if (ref.watch(appConfigProvider).useBackend) {
+    return ApiAuthRepository(
+      auth: ref.watch(firebaseAuthServiceProvider),
+      api: ref.watch(apiClientProvider),
+    );
+  }
   return MockAuthRepository(store: ref.watch(sessionStoreProvider));
 });
 

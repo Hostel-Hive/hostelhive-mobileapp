@@ -22,11 +22,12 @@ The wider project (backend, web dashboard, hardware, infrastructure, documents) 
    ```
    cp .env.example .env
    ```
-3. Install dependencies and run:
+3. Fill in `.env` with the backend address and the Firebase web API key (ask the backend owner), then install dependencies and run:
    ```
    flutter pub get
-   flutter run
+   flutter run --dart-define-from-file=.env
    ```
+   Without `.env` the app runs on built-in demo data (`sanuthi.p@stu.kln.ac.lk` / `Hostel@123`). Students sign in with their university email.
 
 ## Quality checks
 ```
