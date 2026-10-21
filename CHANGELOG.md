@@ -23,6 +23,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Inbox: announcements and alerts with All, Announcements and Alerts tabs, unread banner and dots, mark all as read, empty states, and a message detail that marks the message read.
 - Profile (Me): student details with room, guardian and contact information, a shortcut to the QR code, and sign out with confirmation.
 - Home dashboard with greeting, in/out status, curfew countdown, quick actions and the active request, inside a bottom navigation shell (Home, Passes, Inbox, Me) with an unread dot on Inbox.
+- Backend connection: an authenticated API client, Firebase email sign-in with token refresh, student role check, first-time setup completion and the student profile loaded from the backend. Runs on demo data when `API_BASE_URL` and `FIREBASE_API_KEY` are not set.
+
+### Changed
+- Students sign in with their university email only; the Student ID login was removed.
 
 ### Fixed
 - Hero cards on Home, Me and first sign-in rendered pale blue on devices instead of navy with a subtle glow.

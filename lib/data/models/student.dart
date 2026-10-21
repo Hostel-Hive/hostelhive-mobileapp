@@ -41,6 +41,41 @@ class Student {
     );
   }
 
+  /// Builds a student from `GET /me/student-profile`. The backend sends the
+  /// faculty (shown as the department), the first guardian and the bed in the
+  /// current accommodation; fields it does not send stay empty.
+  factory Student.fromProfileJson(Map<String, dynamic> json) {
+    final accommodation = json['accommodation'] as Map<String, dynamic>?;
+    final guardians = json['guardians'] as List<dynamic>? ?? const [];
+    final guardian = guardians.isEmpty
+        ? null
+        : guardians.first as Map<String, dynamic>;
+    final presence =
+        (json['presence'] as Map<String, dynamic>?)?['status'] as String?;
+
+    String? nonEmpty(Object? value) {
+      final text = value as String?;
+      return text == null || text.isEmpty ? null : text;
+    }
+
+    return Student(
+      studentId: json['student_id'] as String,
+      indexNo: json['index_no'] as String,
+      fullName: json['full_name'] as String,
+      email: json['email'] as String,
+      phone: nonEmpty(json['contact_phone']),
+      year: json['year'] as int?,
+      department: nonEmpty(json['faculty']),
+      blockName: nonEmpty(accommodation?['block_name']),
+      roomNo: nonEmpty(accommodation?['room_no']),
+      bedNo: nonEmpty(accommodation?['bed_no']),
+      guardianName: nonEmpty(guardian?['name']),
+      guardianRelation: nonEmpty(guardian?['relationship']),
+      guardianPhone: nonEmpty(guardian?['contact_phone']),
+      isInside: presence != 'OUT',
+    );
+  }
+
   final String studentId;
   final String indexNo;
   final String fullName;
@@ -74,13 +109,14 @@ class Student {
     return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 
-  String? get blockLabel => blockCode == null ? null : 'Block $blockCode';
+  /// "Block C" from a block code, otherwise the block name from the backend.
+  String? get blockLabel => blockCode == null ? blockName : 'Block $blockCode';
 
   /// For example "Block C · Orchid · C-214 (Bed 2)".
   String get roomSummary {
     return [
       blockLabel,
-      blockName,
+      if (blockCode != null) blockName,
       if (roomNo != null) bedNo == null ? roomNo : '$roomNo ($bedNo)',
     ].whereType<String>().join(' · ');
   }

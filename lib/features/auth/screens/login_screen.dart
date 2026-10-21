@@ -54,7 +54,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
-          'Your welcome email has your Student ID and a temporary password.',
+          'Your welcome email has the link to choose your password.',
         ),
       ),
     );
@@ -80,16 +80,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AppTextField(
-                            label: 'Email or student ID',
+                            label: 'Email',
                             labelColor: AppColors.navy,
-                            hintText: 'e.g. SE/2021/036 or you@stu.kln.ac.lk',
+                            hintText: 'you@stu.kln.ac.lk',
                             controller: _identifier,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
-                            validator: (v) => Validators.required(
-                              v,
-                              field: 'Email or student ID',
-                            ),
+                            validator: Validators.email,
                           ),
                           const SizedBox(height: 14),
                           AppTextField(
@@ -179,7 +176,7 @@ class _Header extends StatelessWidget {
           ),
           SizedBox(height: 20),
           Text(
-            'Sign in with your university email or Student ID.',
+            'Sign in with your university email.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.secondary, fontSize: 14),
           ),

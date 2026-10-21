@@ -52,7 +52,7 @@ void main() {
       await tester.tap(find.text('Sign out').last);
       await tester.pumpAndSettle();
 
-      expect(find.text('EMAIL OR STUDENT ID'), findsOneWidget);
+      expect(find.text('EMAIL'), findsOneWidget);
     });
 
     testWidgets(
