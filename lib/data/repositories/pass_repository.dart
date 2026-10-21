@@ -7,15 +7,25 @@ abstract class PassRepository {
   Future<List<Pass>> fetchPasses();
   Future<Pass> fetchPass(String id);
   Future<PassQuota> fetchQuota();
-  Future<Pass> requestLateAccess({
-    required String title,
-    required String purpose,
-    required DateTime departureAt,
-    required DateTime returnAt,
-    required String destination,
+
+  /// An extended leave between two dates.
+  Future<Pass> requestLeave({
+    required DateTime startsAt,
+    required DateTime endsAt,
     required String reason,
+    String? requestId,
   });
-  Future<Pass> recordGoingHome();
+
+  /// One early exit or late entry at a given time.
+  Future<Pass> requestLateAccess({
+    required LateDirection direction,
+    required DateTime expectedAt,
+    required String reason,
+    String? requestId,
+  });
+
+  /// Declares going home. [requestId] makes a retried call safe.
+  Future<Pass> recordGoingHome({String? requestId});
   Future<void> cancelPass(String passId);
 }
 
@@ -33,6 +43,7 @@ class MockPassRepository implements PassRepository {
   final Duration latency;
   final List<Pass> _passes = [];
   int _nextLateAccess = 2419;
+  int _nextLeave = 3001;
   int _nextGoingHome = 1001;
 
   List<Pass> _seed() {
@@ -59,7 +70,7 @@ class MockPassRepository implements PassRepository {
       ),
       Pass(
         id: 'LA-2418',
-        type: PassType.lateAccess,
+        type: PassType.leave,
         status: PassStatus.approved,
         title: 'Home visit',
         purpose: 'Family wedding',
@@ -105,39 +116,33 @@ class MockPassRepository implements PassRepository {
   }
 
   @override
-  Future<Pass> requestLateAccess({
-    required String title,
-    required String purpose,
-    required DateTime departureAt,
-    required DateTime returnAt,
-    required String destination,
+  Future<Pass> requestLeave({
+    required DateTime startsAt,
+    required DateTime endsAt,
     required String reason,
+    String? requestId,
   }) async {
     await _wait();
-    if (destination.trim().isEmpty || reason.trim().isEmpty) {
-      throw const RepositoryException(
-        'Please enter the destination and the reason.',
-      );
+    if (reason.trim().isEmpty) {
+      throw const RepositoryException('Please enter the reason.');
     }
-    if (departureAt.isBefore(_clock())) {
+    if (startsAt.isBefore(_clock())) {
       throw const RepositoryException(
         'Departure date and time cannot be in the past.',
       );
     }
-    if (!returnAt.isAfter(departureAt)) {
+    if (!endsAt.isAfter(startsAt)) {
       throw const RepositoryException(
         'Return must be after the departure time.',
       );
     }
     final pass = Pass(
-      id: 'LA-${_nextLateAccess++}',
-      type: PassType.lateAccess,
+      id: 'LV-${_nextLeave++}',
+      type: PassType.leave,
       status: PassStatus.pending,
-      title: title,
-      purpose: purpose,
-      departureAt: departureAt,
-      returnAt: returnAt,
-      destination: destination.trim(),
+      title: 'Leave',
+      departureAt: startsAt,
+      returnAt: endsAt,
       reason: reason.trim(),
       submittedAt: _clock(),
     );
@@ -146,18 +151,46 @@ class MockPassRepository implements PassRepository {
   }
 
   @override
-  Future<Pass> recordGoingHome() async {
+  Future<Pass> requestLateAccess({
+    required LateDirection direction,
+    required DateTime expectedAt,
+    required String reason,
+    String? requestId,
+  }) async {
+    await _wait();
+    if (reason.trim().isEmpty) {
+      throw const RepositoryException('Please enter the reason.');
+    }
+    if (expectedAt.isBefore(_clock())) {
+      throw const RepositoryException('The time cannot be in the past.');
+    }
+    final pass = Pass(
+      id: 'LA-${_nextLateAccess++}',
+      type: PassType.lateAccess,
+      status: PassStatus.pending,
+      title: direction.label,
+      departureAt: expectedAt,
+      direction: direction,
+      reason: reason.trim(),
+      submittedAt: _clock(),
+    );
+    _passes.add(pass);
+    return pass;
+  }
+
+  @override
+  Future<Pass> recordGoingHome({String? requestId}) async {
     await _wait();
     final alreadyOut = _passes.any(
       (pass) =>
-          pass.type == PassType.leave && pass.status == PassStatus.approved,
+          pass.type == PassType.goingHome && pass.status == PassStatus.approved,
     );
     if (alreadyOut) throw const AlreadyOutsideException();
 
     final now = _clock();
     final pass = Pass(
       id: 'GH-${_nextGoingHome++}',
-      type: PassType.leave,
+      type: PassType.goingHome,
       status: PassStatus.approved,
       title: 'Going home',
       departureAt: now,
@@ -172,7 +205,7 @@ class MockPassRepository implements PassRepository {
     await _wait();
     final index = _passes.indexWhere((pass) => pass.id == passId);
     if (index == -1) throw const RepositoryException('Pass not found.');
-    if (!_passes[index].isActive) {
+    if (!_passes[index].canCancel) {
       throw const RepositoryException('This pass can no longer be cancelled.');
     }
     _passes[index] = _passes[index].copyWith(status: PassStatus.cancelled);

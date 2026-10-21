@@ -1,10 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/providers/clock_provider.dart';
+import '../../../data/api/api_providers.dart';
 import '../../../data/models/pass.dart';
+import '../../../data/repositories/api_pass_repository.dart';
 import '../../../data/repositories/pass_repository.dart';
 
 final passRepositoryProvider = Provider<PassRepository>((ref) {
+  if (ref.watch(appConfigProvider).useBackend) {
+    return ApiPassRepository(ref.watch(apiClientProvider));
+  }
   return MockPassRepository(clock: ref.watch(clockProvider));
 });
 
@@ -32,7 +38,8 @@ List<Pass> passesIn(List<Pass> passes, PassTab tab, DateTime now) {
 /// True while an approved "going home" leave is open (UC009).
 bool isOutsideOnLeave(List<Pass> passes) {
   return passes.any(
-    (pass) => pass.type == PassType.leave && pass.status == PassStatus.approved,
+    (pass) =>
+        pass.type == PassType.goingHome && pass.status == PassStatus.approved,
   );
 }
 
@@ -48,29 +55,42 @@ class PassesNotifier extends AsyncNotifier<List<Pass>> {
   }
 
   /// Throws a [RepositoryException] when the request is not valid.
-  Future<Pass> requestLateAccess({
-    required String title,
-    required String purpose,
-    required DateTime departureAt,
-    required DateTime returnAt,
-    required String destination,
+  Future<Pass> requestLeave({
+    required DateTime startsAt,
+    required DateTime endsAt,
     required String reason,
+    String? requestId,
+  }) async {
+    final pass = await _repository.requestLeave(
+      startsAt: startsAt,
+      endsAt: endsAt,
+      reason: reason,
+      requestId: requestId,
+    );
+    await _reload();
+    return pass;
+  }
+
+  /// Throws a [RepositoryException] when the request is not valid.
+  Future<Pass> requestLateAccess({
+    required LateDirection direction,
+    required DateTime expectedAt,
+    required String reason,
+    String? requestId,
   }) async {
     final pass = await _repository.requestLateAccess(
-      title: title,
-      purpose: purpose,
-      departureAt: departureAt,
-      returnAt: returnAt,
-      destination: destination,
+      direction: direction,
+      expectedAt: expectedAt,
       reason: reason,
+      requestId: requestId,
     );
     await _reload();
     return pass;
   }
 
   /// Throws [AlreadyOutsideException] when the student is already out.
-  Future<Pass> recordGoingHome() async {
-    final pass = await _repository.recordGoingHome();
+  Future<Pass> recordGoingHome({String? requestId}) async {
+    final pass = await _repository.recordGoingHome(requestId: requestId);
     await _reload();
     return pass;
   }

@@ -18,7 +18,7 @@ import '../utils/curfew.dart';
 /// approved pass that has not ended yet. Going home leaves are excluded
 /// because they are shown as the student's OUT status instead.
 Pass? activeRequest(List<Pass> passes, DateTime now) {
-  final candidates = passes.where((pass) => pass.type != PassType.leave);
+  final candidates = passes.where((pass) => pass.type != PassType.goingHome);
   for (final tab in [PassTab.pending, PassTab.active]) {
     for (final pass in candidates) {
       if (tabOf(pass, now) == tab) return pass;
@@ -386,7 +386,7 @@ class _QuickActions extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _ActionTile(
-                label: 'Request late access',
+                label: 'Request a pass',
                 icon: Icons.event_available_outlined,
                 onTap: () => context.push(AppRoutes.requestLateAccess),
               ),

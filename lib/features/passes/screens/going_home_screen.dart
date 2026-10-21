@@ -7,6 +7,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/error_banner.dart';
 import '../../../core/widgets/primary_app_bar.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../core/utils/uuid.dart';
+import '../../../data/api/api_exception.dart';
 import '../../../data/repositories/exceptions.dart';
 import '../providers/pass_providers.dart';
 
@@ -19,6 +21,7 @@ class GoingHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _GoingHomeScreenState extends ConsumerState<GoingHomeScreen> {
+  String _requestId = newUuid();
   bool _loading = false;
   String? _error;
 
@@ -29,7 +32,9 @@ class _GoingHomeScreenState extends ConsumerState<GoingHomeScreen> {
     });
 
     try {
-      await ref.read(passesProvider.notifier).recordGoingHome();
+      await ref
+          .read(passesProvider.notifier)
+          .recordGoingHome(requestId: _requestId);
       if (!mounted) return;
       context.pushReplacement(AppRoutes.goingHomeRecorded);
     } on RepositoryException catch (e) {
@@ -37,6 +42,7 @@ class _GoingHomeScreenState extends ConsumerState<GoingHomeScreen> {
       setState(() {
         _loading = false;
         _error = e.message;
+        if (e is! NetworkException) _requestId = newUuid();
       });
     }
   }
@@ -81,9 +87,11 @@ class _GoingHomeScreenState extends ConsumerState<GoingHomeScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const _Point('You will be recorded as OUT on the dashboard.'),
+              const _Point('Your declaration is recorded for the hostel.'),
               const _Point('No warden approval is needed during normal hours.'),
-              const _Point('Scan your ID card at the gate when you return.'),
+              const _Point(
+                'Scan your ID card at the gate when you leave and return.',
+              ),
               if (_error != null) ...[
                 const SizedBox(height: 16),
                 ErrorBanner(message: _error!),
