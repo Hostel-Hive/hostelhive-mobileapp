@@ -620,6 +620,39 @@ void main() {
       expect(await store.read(), isNull);
     });
 
+    test('given no student profile, then the student is told so', () async {
+      routes['/me/student-profile'] = json({'error': 'not_found'}, 404);
+
+      await expectLater(
+        build().login('a@b.lk', 'pw'),
+        throwsA(
+          isA<AuthException>().having(
+            (e) => e.message,
+            'message',
+            contains('profile is not set up'),
+          ),
+        ),
+      );
+      expect(await store.read(), isNull);
+    });
+
+    test('given an inactive student, then the message says so', () async {
+      routes['/me/student-profile'] = json({
+        'error': 'active_student_required',
+      }, 409);
+
+      await expectLater(
+        build().login('a@b.lk', 'pw'),
+        throwsA(
+          isA<ApiException>().having(
+            (e) => e.message,
+            'message',
+            contains('not active'),
+          ),
+        ),
+      );
+    });
+
     test('given a saved session, then the student is restored', () async {
       await store.write('refresh-1');
 

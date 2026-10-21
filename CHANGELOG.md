@@ -37,3 +37,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Fixed
 - Hero cards on Home, Me and first sign-in rendered pale blue on devices instead of navy with a subtle glow.
+- A student account without a student profile now gets a clear message at sign in instead of a generic error.

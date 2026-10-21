@@ -78,8 +78,18 @@ class ApiAuthRepository implements AuthRepository {
       // invitation page, which is what the backend needs to confirm setup.
       await _api.postJson('/me/setup/complete');
     }
-    final profile =
-        await _api.getJson('/me/student-profile') as Map<String, dynamic>;
-    return Student.fromProfileJson(profile);
+    try {
+      final profile =
+          await _api.getJson('/me/student-profile') as Map<String, dynamic>;
+      return Student.fromProfileJson(profile);
+    } on ApiException catch (e) {
+      if (e.isNotFound) {
+        throw const AuthException(
+          'Your student profile is not set up yet. '
+          'Please contact the hostel office.',
+        );
+      }
+      rethrow;
+    }
   }
 }
