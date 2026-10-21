@@ -54,6 +54,20 @@ class AuthController extends Notifier<AuthState> {
     );
   }
 
+  /// Reloads the profile, for example to pick up a new IN/OUT status. The
+  /// current profile stays when the reload fails.
+  Future<void> refreshProfile() async {
+    if (!state.isAuthenticated) return;
+    try {
+      final student = await _repository.currentUser();
+      if (student != null) {
+        state = AuthState(status: AuthStatus.authenticated, student: student);
+      }
+    } on RepositoryException {
+      return;
+    }
+  }
+
   Future<String?> signIn(String emailOrId, String password) async {
     return _run(() async {
       final student = await _repository.login(emailOrId, password);

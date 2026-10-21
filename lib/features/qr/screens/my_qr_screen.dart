@@ -1,11 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../providers/qr_providers.dart';
 
 /// Shows the student's unique QR code for the gate scanner (FR010, UC005).
 class MyQrScreen extends ConsumerWidget {
@@ -111,7 +115,13 @@ class MyQrScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            _QrCard(data: student.studentId),
+                            if (ref.watch(appConfigProvider).useBackend)
+                              _BackendQr(
+                                image: ref.watch(qrImageProvider),
+                                onRetry: () => ref.invalidate(qrImageProvider),
+                              )
+                            else
+                              _QrCard(data: student.studentId),
                             const SizedBox(height: 24),
                             _StudentPill(
                               name: student.fullName,
@@ -291,6 +301,45 @@ class _QrCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The QR image issued by the backend, which the gate scanner recognises.
+class _BackendQr extends StatelessWidget {
+  const _BackendQr({required this.image, required this.onRetry});
+
+  final AsyncValue<Uint8List?> image;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 280,
+      height: 280,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+      ),
+      alignment: Alignment.center,
+      child: image.when(
+        loading: () => const CircularProgressIndicator(),
+        error: (_, _) => TextButton(
+          onPressed: onRetry,
+          child: const Text(
+            'Could not load your QR code. Tap to retry.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+        data: (bytes) => bytes == null
+            ? const SizedBox.shrink()
+            : Image.memory(
+                bytes,
+                key: const ValueKey('qr-image'),
+                gaplessPlayback: true,
+              ),
       ),
     );
   }

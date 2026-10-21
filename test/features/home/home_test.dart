@@ -218,8 +218,8 @@ void main() {
 
       await goHome(tester);
 
-      expect(find.text('OUT ON LEAVE'), findsOneWidget);
-      expect(find.text('You’re out on leave.'), findsOneWidget);
+      expect(find.text('OUT'), findsOneWidget);
+      expect(find.text('You’re out of the hostel.'), findsOneWidget);
       expect(find.text('SIGNED IN'), findsNothing);
     });
 
@@ -232,10 +232,7 @@ void main() {
       await tester.tap(find.text('Going home'));
       await tester.pump();
 
-      expect(
-        find.text('You are already marked as out on leave.'),
-        findsOneWidget,
-      );
+      expect(find.text('You are already marked as out.'), findsOneWidget);
       expect(find.text('Confirm going home'), findsNothing);
     });
   });

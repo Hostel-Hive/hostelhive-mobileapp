@@ -491,7 +491,18 @@ void main() {
       expect(student.guardianName, 'Mrs. Ramani Perera');
       expect(student.guardianRelation, 'Mother');
       expect(student.guardianPhone, '+94 77 221 0455');
-      expect(student.isInside, isTrue);
+      expect(student.presence, PresenceStatus.inside);
+    });
+
+    test('given IN, OUT, UNKNOWN or nothing, then presence is mapped', () {
+      expect(presenceFromString('IN'), PresenceStatus.inside);
+      expect(presenceFromString('out'), PresenceStatus.outside);
+      expect(presenceFromString('UNKNOWN'), PresenceStatus.unknown);
+      expect(presenceFromString(null), PresenceStatus.unknown);
+      expect(
+        Student.fromProfileJson({...profile, 'presence': null}).presence,
+        PresenceStatus.unknown,
+      );
     });
 
     test('given no accommodation or guardians, then they stay empty', () {
@@ -509,7 +520,7 @@ void main() {
       expect(student.guardianName, isNull);
       expect(student.phone, isNull);
       expect(student.department, isNull);
-      expect(student.isInside, isFalse);
+      expect(student.presence, PresenceStatus.outside);
     });
   });
 
