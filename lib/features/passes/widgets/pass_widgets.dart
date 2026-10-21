@@ -176,7 +176,10 @@ class PassCard extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [PassIdText(pass.id), PassStatusBadge(pass.status)],
+            children: [
+              PassIdText(pass.displayId),
+              PassStatusBadge(pass.status),
+            ],
           ),
           const SizedBox(height: 10),
           Text(
@@ -255,7 +258,7 @@ class PassHistoryRow extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        PassIdText(pass.id),
+                        PassIdText(pass.displayId),
                       ],
                     ),
                     const SizedBox(height: 4),

@@ -263,34 +263,58 @@ void main() {
     });
 
     test(
-      'given valid details, then a pending late access pass is created',
+      'given valid leave details, then a pending leave is created',
       () async {
-        final pass = await repo.requestLateAccess(
-          title: 'Home visit',
-          purpose: 'Family',
-          departureAt: fixedNow.add(const Duration(days: 1)),
-          returnAt: fixedNow.add(const Duration(days: 2)),
-          destination: ' Gampaha ',
+        final pass = await repo.requestLeave(
+          startsAt: fixedNow.add(const Duration(days: 1)),
+          endsAt: fixedNow.add(const Duration(days: 2)),
           reason: ' Wedding ',
         );
 
         expect(pass.status, PassStatus.pending);
-        expect(pass.id, 'LA-2419');
-        expect(pass.destination, 'Gampaha');
+        expect(pass.type, PassType.leave);
+        expect(pass.id, 'LV-3001');
+        expect(pass.title, 'Leave');
+        expect(pass.reason, 'Wedding');
         expect((await repo.fetchPasses()).length, 4);
       },
     );
 
+    test('given a blank reason, then the leave is rejected', () async {
+      await expectLater(
+        repo.requestLeave(
+          startsAt: fixedNow.add(const Duration(days: 1)),
+          endsAt: fixedNow.add(const Duration(days: 2)),
+          reason: ' ',
+        ),
+        throwsA(isA<RepositoryException>()),
+      );
+    });
+
+    test('given a leave starting in the past, then it is rejected', () async {
+      await expectLater(
+        repo.requestLeave(
+          startsAt: fixedNow.subtract(const Duration(hours: 1)),
+          endsAt: fixedNow.add(const Duration(days: 1)),
+          reason: 'r',
+        ),
+        throwsA(
+          isA<RepositoryException>().having(
+            (e) => e.message,
+            'message',
+            contains('past'),
+          ),
+        ),
+      );
+    });
+
     test(
-      'given missing destination or reason, then the request is rejected',
+      'given a return before departure, then the leave is rejected',
       () async {
         await expectLater(
-          repo.requestLateAccess(
-            title: 't',
-            purpose: 'p',
-            departureAt: fixedNow.add(const Duration(days: 1)),
-            returnAt: fixedNow.add(const Duration(days: 2)),
-            destination: '',
+          repo.requestLeave(
+            startsAt: fixedNow.add(const Duration(days: 2)),
+            endsAt: fixedNow.add(const Duration(days: 1)),
             reason: 'r',
           ),
           throwsA(isA<RepositoryException>()),
@@ -299,15 +323,42 @@ void main() {
     );
 
     test(
-      'given a departure in the past, then the request is rejected',
+      'given valid details, then a pending late access is created',
+      () async {
+        final pass = await repo.requestLateAccess(
+          direction: LateDirection.earlyExit,
+          expectedAt: fixedNow.add(const Duration(days: 1)),
+          reason: ' Early train ',
+        );
+
+        expect(pass.status, PassStatus.pending);
+        expect(pass.type, PassType.lateAccess);
+        expect(pass.id, 'LA-2419');
+        expect(pass.title, 'Early exit');
+        expect(pass.direction, LateDirection.earlyExit);
+        expect(pass.reason, 'Early train');
+        expect(pass.returnAt, isNull);
+      },
+    );
+
+    test('given a blank reason, then the late access is rejected', () async {
+      await expectLater(
+        repo.requestLateAccess(
+          direction: LateDirection.lateEntry,
+          expectedAt: fixedNow.add(const Duration(days: 1)),
+          reason: '',
+        ),
+        throwsA(isA<RepositoryException>()),
+      );
+    });
+
+    test(
+      'given a time in the past, then the late access is rejected',
       () async {
         await expectLater(
           repo.requestLateAccess(
-            title: 't',
-            purpose: 'p',
-            departureAt: fixedNow.subtract(const Duration(hours: 1)),
-            returnAt: fixedNow.add(const Duration(days: 1)),
-            destination: 'd',
+            direction: LateDirection.lateEntry,
+            expectedAt: fixedNow.subtract(const Duration(hours: 1)),
             reason: 'r',
           ),
           throwsA(
@@ -321,48 +372,31 @@ void main() {
       },
     );
 
-    test(
-      'given a return before departure, then the request is rejected',
-      () async {
-        await expectLater(
-          repo.requestLateAccess(
-            title: 't',
-            purpose: 'p',
-            departureAt: fixedNow.add(const Duration(days: 2)),
-            returnAt: fixedNow.add(const Duration(days: 1)),
-            destination: 'd',
-            reason: 'r',
-          ),
-          throwsA(isA<RepositoryException>()),
-        );
-      },
-    );
+    test('given a pending pass, then it can be cancelled once', () async {
+      final pass = await repo.requestLeave(
+        startsAt: fixedNow.add(const Duration(days: 1)),
+        endsAt: fixedNow.add(const Duration(days: 2)),
+        reason: 'r',
+      );
 
-    test('given going home, then a leave pass is recorded once', () async {
+      await repo.cancelPass(pass.id);
+
+      expect((await repo.fetchPass(pass.id)).status, PassStatus.cancelled);
+      await expectLater(
+        repo.cancelPass(pass.id),
+        throwsA(isA<RepositoryException>()),
+      );
+    });
+
+    test('given going home, then a declaration is recorded once', () async {
       final pass = await repo.recordGoingHome();
 
-      expect(pass.type, PassType.leave);
+      expect(pass.type, PassType.goingHome);
       expect(pass.id, 'GH-1001');
       await expectLater(
         repo.recordGoingHome(),
         throwsA(isA<AlreadyOutsideException>()),
       );
-    });
-
-    test(
-      'given the leave is cancelled, then going home can be recorded again',
-      () async {
-        final pass = await repo.recordGoingHome();
-        await repo.cancelPass(pass.id);
-
-        expect((await repo.recordGoingHome()).id, 'GH-1002');
-      },
-    );
-
-    test('given an active pass, then it can be cancelled', () async {
-      await repo.cancelPass('LA-2418');
-
-      expect((await repo.fetchPass('LA-2418')).status, PassStatus.cancelled);
     });
 
     test('given an unknown or finished pass, then cancel fails', () async {

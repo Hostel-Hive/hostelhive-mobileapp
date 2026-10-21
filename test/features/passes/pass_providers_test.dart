@@ -93,7 +93,7 @@ void main() {
     test('given an approved going-home leave, then the student is outside', () {
       expect(
         isOutsideOnLeave([
-          makePass(status: PassStatus.approved, type: PassType.leave),
+          makePass(status: PassStatus.approved, type: PassType.goingHome),
         ]),
         isTrue,
       );
@@ -105,7 +105,7 @@ void main() {
         expect(isOutsideOnLeave([]), isFalse);
         expect(
           isOutsideOnLeave([
-            makePass(status: PassStatus.cancelled, type: PassType.leave),
+            makePass(status: PassStatus.cancelled, type: PassType.goingHome),
           ]),
           isFalse,
         );
@@ -126,22 +126,36 @@ void main() {
       expect(passes.first.id, 'LA-2418');
     });
 
-    test('given a valid request, then the list and quota refresh', () async {
+    test('given a valid leave, then the list and quota refresh', () async {
+      final container = makeContainer();
+      await container.read(passesProvider.future);
+
+      final pass = await container
+          .read(passesProvider.notifier)
+          .requestLeave(
+            startsAt: fixedNow.add(const Duration(days: 1)),
+            endsAt: fixedNow.add(const Duration(days: 2)),
+            reason: 'Wedding',
+          );
+
+      expect(pass.status, PassStatus.pending);
+      expect(pass.type, PassType.leave);
+      expect(container.read(passesProvider).value!.length, 4);
+    });
+
+    test('given a valid late access, then the list refreshes', () async {
       final container = makeContainer();
       await container.read(passesProvider.future);
 
       final pass = await container
           .read(passesProvider.notifier)
           .requestLateAccess(
-            title: 'Home visit',
-            purpose: 'Family',
-            departureAt: fixedNow.add(const Duration(days: 1)),
-            returnAt: fixedNow.add(const Duration(days: 2)),
-            destination: 'Gampaha',
-            reason: 'Wedding',
+            direction: LateDirection.lateEntry,
+            expectedAt: fixedNow.add(const Duration(days: 1)),
+            reason: 'Late bus',
           );
 
-      expect(pass.status, PassStatus.pending);
+      expect(pass.title, 'Late entry');
       expect(container.read(passesProvider).value!.length, 4);
     });
 
@@ -155,11 +169,18 @@ void main() {
           container
               .read(passesProvider.notifier)
               .requestLateAccess(
-                title: 't',
-                purpose: 'p',
-                departureAt: fixedNow.subtract(const Duration(hours: 1)),
-                returnAt: fixedNow.add(const Duration(days: 1)),
-                destination: 'd',
+                direction: LateDirection.lateEntry,
+                expectedAt: fixedNow.subtract(const Duration(hours: 1)),
+                reason: 'r',
+              ),
+          throwsA(isA<RepositoryException>()),
+        );
+        await expectLater(
+          container
+              .read(passesProvider.notifier)
+              .requestLeave(
+                startsAt: fixedNow.subtract(const Duration(hours: 1)),
+                endsAt: fixedNow.add(const Duration(days: 1)),
                 reason: 'r',
               ),
           throwsA(isA<RepositoryException>()),
@@ -187,10 +208,16 @@ void main() {
     test('given cancelPass, then the pass is cancelled in the list', () async {
       final container = makeContainer();
       await container.read(passesProvider.future);
+      final notifier = container.read(passesProvider.notifier);
+      final pending = await notifier.requestLeave(
+        startsAt: fixedNow.add(const Duration(days: 1)),
+        endsAt: fixedNow.add(const Duration(days: 2)),
+        reason: 'r',
+      );
 
-      await container.read(passesProvider.notifier).cancelPass('LA-2418');
+      await notifier.cancelPass(pending.id);
 
-      final pass = container.read(passByIdProvider('LA-2418')).value!;
+      final pass = container.read(passByIdProvider(pending.id)).value!;
       expect(pass.status, PassStatus.cancelled);
     });
   });

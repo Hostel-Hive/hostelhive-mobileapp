@@ -91,7 +91,7 @@ void main() {
       final passes = [
         pass('done', PassStatus.completed),
         pass('no', PassStatus.rejected),
-        pass('out', PassStatus.approved, type: PassType.leave),
+        pass('out', PassStatus.approved, type: PassType.goingHome),
       ];
 
       expect(activeRequest(passes, fixedNow), isNull);
@@ -158,12 +158,10 @@ void main() {
       expect(find.byType(MyQrScreen), findsOneWidget);
     });
 
-    testWidgets('given Request late access, then the form opens', (
-      tester,
-    ) async {
+    testWidgets('given Request a pass, then the form opens', (tester) async {
       await pumpApp(tester);
 
-      await tester.tap(find.text('Request late access'));
+      await tester.tap(find.text('Request a pass'));
       await tester.pumpAndSettle();
 
       expect(find.text('Submit to warden'), findsOneWidget);

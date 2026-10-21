@@ -42,7 +42,7 @@ class _PassesScreenState extends ConsumerState<PassesScreen> {
         shape: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: 'Request late access',
+        tooltip: 'Request a pass',
         backgroundColor: AppColors.navy,
         foregroundColor: Colors.white,
         shape: const CircleBorder(),
@@ -65,9 +65,9 @@ class _PassesScreenState extends ConsumerState<PassesScreen> {
               icon: Icons.confirmation_number_outlined,
               title: 'No passes yet',
               description:
-                  'Request late access or mark going home and your passes '
+                  'Request leave or late access and your passes '
                   'will show here',
-              buttonLabel: 'Request late access',
+              buttonLabel: 'Request a pass',
               onButtonPressed: () => context.push(AppRoutes.requestLateAccess),
             );
           }

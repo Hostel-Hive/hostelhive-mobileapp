@@ -35,6 +35,17 @@ class UncancellablePassRepository extends MockPassRepository {
   }
 }
 
+Future<MockPassRepository> withPendingPass([MockPassRepository? repo]) async {
+  final repository =
+      repo ?? MockPassRepository(clock: () => fixedNow, latency: Duration.zero);
+  await repository.requestLeave(
+    startsAt: fixedNow.add(const Duration(days: 1)),
+    endsAt: fixedNow.add(const Duration(days: 2)),
+    reason: 'Family visit',
+  );
+  return repository;
+}
+
 void main() {
   group('Passes screen', () {
     testWidgets(
@@ -116,7 +127,7 @@ void main() {
       await pumpApp(tester);
       await goTo(tester, AppRoutes.passes);
 
-      await tester.tap(find.byTooltip('Request late access'));
+      await tester.tap(find.byTooltip('Request a pass'));
       await tester.pumpAndSettle();
 
       expect(find.text('Submit to warden'), findsOneWidget);
@@ -135,9 +146,7 @@ void main() {
 
       expect(find.text('No passes yet'), findsOneWidget);
 
-      await tester.tap(
-        find.widgetWithText(PrimaryButton, 'Request late access'),
-      );
+      await tester.tap(find.widgetWithText(PrimaryButton, 'Request a pass'));
       await tester.pumpAndSettle();
 
       expect(find.text('Submit to warden'), findsOneWidget);
@@ -176,7 +185,7 @@ void main() {
         expect(find.text('Gampaha'), findsOneWidget);
         expect(find.text('Parent pickup'), findsOneWidget);
         expect(find.text('+94 77 221 0455'), findsOneWidget);
-        expect(find.text('Cancel pass'), findsOneWidget);
+        expect(find.text('Cancel pass'), findsNothing);
       },
     );
 
@@ -208,8 +217,12 @@ void main() {
     testWidgets(
       'given a cancel is confirmed, then the pass becomes cancelled',
       (tester) async {
-        await pumpApp(tester);
-        await pushTo(tester, '/passes/LA-2418');
+        final repo = (await tester.runAsync(withPendingPass))!;
+        await pumpApp(
+          tester,
+          overrides: [passRepositoryProvider.overrideWithValue(repo)],
+        );
+        await pushTo(tester, '/passes/LV-3001');
 
         await tester.tap(find.text('Cancel pass'));
         await tester.pumpAndSettle();
@@ -230,30 +243,33 @@ void main() {
     testWidgets(
       'given the dialog is dismissed with Keep pass, then nothing changes',
       (tester) async {
-        await pumpApp(tester);
-        await pushTo(tester, '/passes/LA-2418');
+        final repo = (await tester.runAsync(withPendingPass))!;
+        await pumpApp(
+          tester,
+          overrides: [passRepositoryProvider.overrideWithValue(repo)],
+        );
+        await pushTo(tester, '/passes/LV-3001');
 
         await tester.tap(find.text('Cancel pass'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Keep pass'));
         await tester.pumpAndSettle();
 
-        expect(find.text('APPROVED'), findsOneWidget);
+        expect(find.text('PENDING'), findsOneWidget);
       },
     );
 
     testWidgets('given cancelling fails, then the reason is shown', (
       tester,
     ) async {
+      final repo = (await tester.runAsync(
+        () => withPendingPass(UncancellablePassRepository()),
+      ))!;
       await pumpApp(
         tester,
-        overrides: [
-          passRepositoryProvider.overrideWithValue(
-            UncancellablePassRepository(),
-          ),
-        ],
+        overrides: [passRepositoryProvider.overrideWithValue(repo)],
       );
-      await pushTo(tester, '/passes/LA-2418');
+      await pushTo(tester, '/passes/LV-3001');
 
       await tester.tap(find.text('Cancel pass'));
       await tester.pumpAndSettle();
@@ -269,7 +285,7 @@ void main() {
         find.text('Cancelling is not possible right now.'),
         findsOneWidget,
       );
-      expect(find.text('APPROVED'), findsOneWidget);
+      expect(find.text('PENDING'), findsOneWidget);
     });
 
     testWidgets('given an unknown pass, then a not found message shows', (
@@ -288,42 +304,38 @@ void main() {
       await pushTo(tester, AppRoutes.requestLateAccess);
     }
 
-    testWidgets(
-      'given the form is empty, then destination and reason are required',
-      (tester) async {
-        await openForm(tester);
+    testWidgets('given the form is empty, then the reason is required', (
+      tester,
+    ) async {
+      await openForm(tester);
 
-        await tester.tap(find.text('Submit to warden'));
-        await tester.pump();
+      await tester.tap(find.text('Submit to warden'));
+      await tester.pump();
 
-        expect(find.text('Destination is required'), findsOneWidget);
-        expect(find.text('Reason is required'), findsOneWidget);
-      },
-    );
+      expect(find.text('Reason is required'), findsOneWidget);
+    });
 
     testWidgets(
       'given valid details, then the request is sent and can be viewed',
       (tester) async {
         await openForm(tester);
 
-        await tester.tap(find.text('Medical'));
-        await tester.pump();
-        await tester.enterText(find.byType(TextFormField).at(0), 'Colombo');
         await tester.enterText(
-          find.byType(TextFormField).at(1),
+          find.byType(TextFormField).first,
           'Dentist appointment',
         );
         await tester.tap(find.text('Submit to warden'));
         await tester.pumpAndSettle();
 
         expect(find.text('Request sent'), findsWidgets);
-        expect(find.text('LA-2419'), findsOneWidget);
+        expect(find.text('LV-3001'), findsOneWidget);
 
         await tester.tap(find.text('View pass'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Pass LA-2419'), findsOneWidget);
-        expect(find.text('Medical visit'), findsOneWidget);
+        expect(find.text('Pass LV-3001'), findsOneWidget);
+        expect(find.text('Leave'), findsOneWidget);
+        expect(find.text('Dentist appointment'), findsOneWidget);
         expect(find.text('PENDING'), findsOneWidget);
       },
     );
@@ -332,8 +344,7 @@ void main() {
       tester,
     ) async {
       await openForm(tester);
-      await tester.enterText(find.byType(TextFormField).at(0), 'Colombo');
-      await tester.enterText(find.byType(TextFormField).at(1), 'Dentist');
+      await tester.enterText(find.byType(TextFormField).first, 'Dentist');
       await tester.tap(find.text('Submit to warden'));
       await tester.pumpAndSettle();
 
@@ -358,8 +369,7 @@ void main() {
           ],
         );
         await pushTo(tester, AppRoutes.requestLateAccess);
-        await tester.enterText(find.byType(TextFormField).at(0), 'Colombo');
-        await tester.enterText(find.byType(TextFormField).at(1), 'Dentist');
+        await tester.enterText(find.byType(TextFormField).first, 'Dentist');
 
         await tester.tap(find.text('Submit to warden'));
         await tester.pumpAndSettle();
@@ -368,6 +378,43 @@ void main() {
         expect(find.text('Request sent'), findsNothing);
       },
     );
+
+    testWidgets('given Late access, then movement and one time show', (
+      tester,
+    ) async {
+      await openForm(tester);
+
+      await tester.tap(find.text('Late access'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('MOVEMENT'), findsOneWidget);
+      expect(find.text('Late entry'), findsOneWidget);
+      expect(find.text('Early exit'), findsOneWidget);
+      expect(find.text('Return date'), findsNothing);
+      expect(find.textContaining('Duration'), findsNothing);
+    });
+
+    testWidgets('given an early exit, then the request is sent', (
+      tester,
+    ) async {
+      await openForm(tester);
+
+      await tester.tap(find.text('Late access'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Early exit'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).first, 'Early train');
+      await tester.tap(find.text('Submit to warden'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Request sent'), findsWidgets);
+      expect(find.text('LA-2419'), findsOneWidget);
+
+      await tester.tap(find.text('View pass'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Early exit'), findsOneWidget);
+    });
 
     testWidgets(
       'given the default dates, then the duration is within the quota',
@@ -482,7 +529,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Going home recorded'), findsWidgets);
-      expect(find.textContaining('marked as OUT'), findsOneWidget);
+      expect(find.textContaining('declaration is recorded'), findsOneWidget);
 
       await tester.tap(find.text('Back to Home'));
       await tester.pumpAndSettle();

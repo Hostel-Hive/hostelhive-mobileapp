@@ -55,7 +55,7 @@ class PassDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.formBackground,
       appBar: PrimaryAppBar(
-        title: 'Pass $passId',
+        title: 'Pass ${pass.valueOrNull?.displayId ?? passId}',
         actions: [
           IconButton(
             tooltip: 'About passes',
@@ -140,7 +140,7 @@ class _Detail extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        PassIdText(pass.id),
+                        PassIdText(pass.displayId),
                         PassStatusBadge(pass.status),
                       ],
                     ),
@@ -154,11 +154,12 @@ class _Detail extends StatelessWidget {
                         letterSpacing: -0.5,
                       ),
                     ),
-                    if (decidedBy != null && decidedAt != null) ...[
+                    if (decidedAt != null) ...[
                       const SizedBox(height: 10),
                       Text(
-                        '${pass.status == PassStatus.rejected ? 'Rejected' : 'Approved'} '
-                        'by $decidedBy · ${relativeTime(decidedAt, now: now)}',
+                        '${pass.status == PassStatus.rejected ? 'Rejected' : 'Approved'}'
+                        '${decidedBy == null ? '' : ' by $decidedBy'} · '
+                        '${relativeTime(decidedAt, now: now)}',
                         style: const TextStyle(
                           color: AppColors.secondary,
                           fontSize: 13,
@@ -207,7 +208,7 @@ class _Detail extends StatelessWidget {
             ],
           ),
         ),
-        if (pass.isActive)
+        if (pass.canCancel || pass.status == PassStatus.approved)
           Container(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
             decoration: const BoxDecoration(
@@ -216,20 +217,22 @@ class _Detail extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: onCancel,
-                    child: const Text(
-                      'Cancel pass',
-                      style: TextStyle(
-                        color: AppColors.secondary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                if (pass.canCancel)
+                  Expanded(
+                    child: TextButton(
+                      onPressed: onCancel,
+                      child: const Text(
+                        'Cancel pass',
+                        style: TextStyle(
+                          color: AppColors.secondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
+                if (pass.canCancel && pass.status == PassStatus.approved)
+                  const SizedBox(width: 12),
                 if (pass.status == PassStatus.approved)
                   Expanded(
                     child: PrimaryButton(

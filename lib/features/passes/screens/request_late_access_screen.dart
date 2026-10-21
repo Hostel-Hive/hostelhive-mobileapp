@@ -5,16 +5,19 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/uuid.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/error_banner.dart';
 import '../../../core/widgets/info_alert_box.dart';
 import '../../../core/widgets/primary_app_bar.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../data/api/api_exception.dart';
+import '../../../data/models/pass.dart';
 import '../../../data/repositories/exceptions.dart';
 import '../providers/pass_providers.dart';
 
-/// Request Late Entry/Exit (UC010).
+/// Request an extended leave (UC009) or one early exit / late entry (UC010).
 class RequestLateAccessScreen extends ConsumerStatefulWidget {
   const RequestLateAccessScreen({super.key});
 
@@ -25,21 +28,20 @@ class RequestLateAccessScreen extends ConsumerStatefulWidget {
 
 class _RequestLateAccessScreenState
     extends ConsumerState<RequestLateAccessScreen> {
-  static const _purposes = {
-    'Medical': 'Medical visit',
-    'Family': 'Home visit',
-    'Study': 'Study outing',
-    'Other': 'Late access',
-  };
+  static const _leave = 'Leave';
+  static const _lateAccess = 'Late access';
 
   final _formKey = GlobalKey<FormState>();
-  final _destination = TextEditingController();
   final _reason = TextEditingController();
   late DateTime _departure;
   late DateTime _return;
-  String _purpose = 'Family';
+  String _kind = _leave;
+  LateDirection _direction = LateDirection.lateEntry;
+  String _requestId = newUuid();
   bool _loading = false;
   String? _error;
+
+  bool get _isLeave => _kind == _leave;
 
   @override
   void initState() {
@@ -51,7 +53,6 @@ class _RequestLateAccessScreenState
 
   @override
   void dispose() {
-    _destination.dispose();
     _reason.dispose();
     super.dispose();
   }
@@ -113,16 +114,20 @@ class _RequestLateAccessScreenState
     });
 
     try {
-      final pass = await ref
-          .read(passesProvider.notifier)
-          .requestLateAccess(
-            title: _purposes[_purpose]!,
-            purpose: _purpose,
-            departureAt: _departure,
-            returnAt: _return,
-            destination: _destination.text,
-            reason: _reason.text,
-          );
+      final notifier = ref.read(passesProvider.notifier);
+      final pass = _isLeave
+          ? await notifier.requestLeave(
+              startsAt: _departure,
+              endsAt: _return,
+              reason: _reason.text,
+              requestId: _requestId,
+            )
+          : await notifier.requestLateAccess(
+              direction: _direction,
+              expectedAt: _departure,
+              reason: _reason.text,
+              requestId: _requestId,
+            );
       if (!mounted) return;
       context.pushReplacement('/passes/${pass.id}/submitted');
     } on RepositoryException catch (e) {
@@ -130,6 +135,9 @@ class _RequestLateAccessScreenState
       setState(() {
         _loading = false;
         _error = e.message;
+        // Only a lost connection may have reached the server; anything else
+        // is a new attempt and needs a new request id.
+        if (e is! NetworkException) _requestId = newUuid();
       });
     }
   }
@@ -140,7 +148,7 @@ class _RequestLateAccessScreenState
 
     return Scaffold(
       backgroundColor: AppColors.formBackground,
-      appBar: const PrimaryAppBar(title: 'Request late access'),
+      appBar: const PrimaryAppBar(title: 'Request a pass'),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
         decoration: const BoxDecoration(
@@ -173,26 +181,43 @@ class _RequestLateAccessScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const InfoAlertBox(
+              InfoAlertBox(
                 icon: Icons.info_outline,
-                title: 'Only needed for entries outside 06:00–20:00',
-                description:
-                    'Warden approves by 22:00. Check Inbox for status.',
+                title: _isLeave
+                    ? 'Extended leave needs the warden’s approval'
+                    : 'Only needed for entries outside 06:00–20:00',
+                description: _isLeave
+                    ? 'Check Inbox for the decision.'
+                    : 'Warden approves by 22:00. Check Inbox for status.',
               ),
               const SizedBox(height: 20),
-              const _Label('Purpose'),
+              const _Label('Type'),
               const SizedBox(height: 8),
-              _PurposePicker(
-                purposes: _purposes.keys.toList(),
-                selected: _purpose,
-                onChanged: (value) => setState(() => _purpose = value),
+              _SegmentPicker(
+                options: const [_leave, _lateAccess],
+                selected: _kind,
+                onChanged: (value) => setState(() => _kind = value),
               ),
+              if (!_isLeave) ...[
+                const SizedBox(height: 18),
+                const _Label('Movement'),
+                const SizedBox(height: 8),
+                _SegmentPicker(
+                  options: [for (final d in LateDirection.values) d.label],
+                  selected: _direction.label,
+                  onChanged: (value) => setState(
+                    () => _direction = LateDirection.values.firstWhere(
+                      (d) => d.label == value,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 18),
               Row(
                 children: [
                   Expanded(
                     child: _PickerField(
-                      label: 'Departure date',
+                      label: _isLeave ? 'Departure date' : 'Date',
                       value: formatDate(_departure),
                       icon: Icons.calendar_today_outlined,
                       onTap: () => _pickDate(departure: true),
@@ -201,7 +226,7 @@ class _RequestLateAccessScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: _PickerField(
-                      label: 'Departure time',
+                      label: _isLeave ? 'Departure time' : 'Time',
                       value: formatTime(_departure),
                       icon: Icons.schedule,
                       onTap: () => _pickTime(departure: true),
@@ -209,46 +234,39 @@ class _RequestLateAccessScreenState
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _PickerField(
-                      label: 'Return date',
-                      value: formatDate(_return),
-                      icon: Icons.calendar_today_outlined,
-                      onTap: () => _pickDate(departure: false),
+              if (_isLeave) ...[
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _PickerField(
+                        label: 'Return date',
+                        value: formatDate(_return),
+                        icon: Icons.calendar_today_outlined,
+                        onTap: () => _pickDate(departure: false),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _PickerField(
-                      label: 'Return time',
-                      value: formatTime(_return),
-                      icon: Icons.schedule,
-                      onTap: () => _pickTime(departure: false),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _PickerField(
+                        label: 'Return time',
+                        value: formatTime(_return),
+                        icon: Icons.schedule,
+                        onTap: () => _pickTime(departure: false),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _DurationChip(
-                departure: _departure,
-                returnAt: _return,
-                remainingDays: quota == null
-                    ? null
-                    : quota.totalDays - quota.usedDays,
-                totalDays: quota?.totalDays,
-              ),
-              const SizedBox(height: 16),
-              AppTextField(
-                label: 'Destination',
-                hintText: 'Where are you going?',
-                controller: _destination,
-                textInputAction: TextInputAction.next,
-                labelColor: AppColors.navy,
-                validator: (v) => Validators.required(v, field: 'Destination'),
-              ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _DurationChip(
+                  departure: _departure,
+                  returnAt: _return,
+                  remainingDays: quota == null
+                      ? null
+                      : quota.totalDays - quota.usedDays,
+                  totalDays: quota?.totalDays,
+                ),
+              ],
               const SizedBox(height: 16),
               AppTextField(
                 label: 'Reason',
@@ -289,14 +307,14 @@ class _Label extends StatelessWidget {
   }
 }
 
-class _PurposePicker extends StatelessWidget {
-  const _PurposePicker({
-    required this.purposes,
+class _SegmentPicker extends StatelessWidget {
+  const _SegmentPicker({
+    required this.options,
     required this.selected,
     required this.onChanged,
   });
 
-  final List<String> purposes;
+  final List<String> options;
   final String selected;
   final ValueChanged<String> onChanged;
 
@@ -310,31 +328,31 @@ class _PurposePicker extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final purpose in purposes)
+          for (final option in options)
             Expanded(
               child: Semantics(
                 button: true,
-                selected: purpose == selected,
+                selected: option == selected,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  onTap: () => onChanged(purpose),
+                  onTap: () => onChanged(option),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: purpose == selected
+                      color: option == selected
                           ? AppColors.surface
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      purpose,
+                      option,
                       style: TextStyle(
-                        color: purpose == selected
+                        color: option == selected
                             ? AppColors.navy
                             : AppColors.secondary,
                         fontSize: 13,
-                        fontWeight: purpose == selected
+                        fontWeight: option == selected
                             ? FontWeight.w700
                             : FontWeight.w500,
                       ),
