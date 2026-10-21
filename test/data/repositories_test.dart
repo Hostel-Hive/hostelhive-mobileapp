@@ -425,11 +425,11 @@ void main() {
           repo = MockComplaintRepository(clock: clock, latency: Duration.zero),
     );
 
-    test('given seed data, then CMP-0142 is ongoing and critical', () async {
+    test('given seed data, then CMP-0142 is ongoing', () async {
       final complaint = await repo.fetchComplaint('CMP-0142');
 
       expect(complaint.status, ComplaintStatus.ongoing);
-      expect(complaint.severity, ComplaintSeverity.critical);
+      expect(complaint.category, 'Maintenance');
       expect(complaint.updates.length, 2);
     });
 
@@ -444,10 +444,8 @@ void main() {
       'given valid details, then an open complaint is created with updates',
       () async {
         final complaint = await repo.submitComplaint(
-          category: 'Facilities',
-          title: ' Leaking tap ',
-          description: ' Water everywhere ',
-          severity: ComplaintSeverity.high,
+          category: 'Maintenance',
+          description: ' Leaking tap\nWater everywhere ',
           imagePaths: const ['a.jpg', 'b.png'],
         );
 
@@ -456,7 +454,7 @@ void main() {
         expect(complaint.title, 'Leaking tap');
         expect(complaint.imagePaths.length, 2);
         expect(complaint.updates.first.text, 'Original report with 2 photos.');
-        expect(complaint.updates.last.text, contains('SLA 12 hours'));
+        expect(complaint.updates.last.text, contains('Maintenance team'));
         expect((await repo.fetchComplaints()).first.id, 'CMP-0143');
       },
     );
@@ -465,10 +463,8 @@ void main() {
       'given no photos, then the first update says original report',
       () async {
         final complaint = await repo.submitComplaint(
-          category: 'Other',
-          title: 't',
+          category: 'Disciplinary',
           description: 'd',
-          severity: ComplaintSeverity.normal,
         );
 
         expect(complaint.updates.first.text, 'Original report.');
@@ -476,38 +472,63 @@ void main() {
     );
 
     test('given blank fields, then the complaint is rejected', () async {
-      for (final args in [
-        ('', 't', 'd'),
-        ('Other', ' ', 'd'),
-        ('Other', 't', '  '),
-      ]) {
+      for (final args in [('', 'd'), ('Disciplinary', '  ')]) {
         await expectLater(
-          repo.submitComplaint(
-            category: args.$1,
-            title: args.$2,
-            description: args.$3,
-            severity: ComplaintSeverity.normal,
-          ),
+          repo.submitComplaint(category: args.$1, description: args.$2),
           throwsA(isA<RepositoryException>()),
         );
       }
     });
 
     test(
-      'given more than five photos, then the complaint is rejected',
+      'given more than three photos, then the complaint is rejected',
       () async {
         await expectLater(
           repo.submitComplaint(
-            category: 'Other',
-            title: 't',
+            category: 'Disciplinary',
             description: 'd',
-            severity: ComplaintSeverity.normal,
-            imagePaths: List.generate(6, (i) => 'p$i.jpg'),
+            imagePaths: List.generate(4, (i) => 'p$i.jpg'),
           ),
           throwsA(isA<RepositoryException>()),
         );
       },
     );
+
+    test('given a note, then it is added and the version moves on', () async {
+      final update = await repo.addNote(
+        complaintId: 'CMP-0142',
+        text: ' Still blocked ',
+        expectedVersion: 1,
+      );
+
+      expect(update.text, 'Still blocked');
+      expect(update.isStudent, isTrue);
+      final complaint = await repo.fetchComplaint('CMP-0142');
+      expect(complaint.version, 2);
+      expect(complaint.updates.last.text, 'Still blocked');
+    });
+
+    test('given a bad note request, then it is rejected', () async {
+      Future<void> expectRejected(Future<Object?> call) =>
+          expectLater(call, throwsA(isA<RepositoryException>()));
+
+      await expectRejected(
+        repo.addNote(complaintId: 'nope', text: 'x', expectedVersion: 1),
+      );
+      await expectRejected(
+        repo.addNote(complaintId: 'CMP-0142', text: ' ', expectedVersion: 1),
+      );
+      await expectRejected(
+        repo.addNote(complaintId: 'CMP-0142', text: 'x', expectedVersion: 9),
+      );
+    });
+
+    test('given photos, then the demo repository has none to download', () {
+      expect(
+        () => repo.fetchImage(complaintId: 'CMP-0142', imageId: 'i'),
+        throwsA(isA<RepositoryException>()),
+      );
+    });
 
     test('the default clock and latency can be used', () async {
       expect(await MockComplaintRepository().fetchComplaints(), isNotEmpty);
