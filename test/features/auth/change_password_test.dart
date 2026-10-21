@@ -24,16 +24,18 @@ void main() {
       repo = MockAuthRepository(store: store, latency: Duration.zero);
     });
 
-    test('succeeds with correct current password and strong new password',
-        () async {
-      await expectLater(
-        repo.changeCurrentPassword(
-          currentPassword: 'Hostel@123',
-          newPassword: 'NewPass@456',
-        ),
-        completes,
-      );
-    });
+    test(
+      'succeeds with correct current password and strong new password',
+      () async {
+        await expectLater(
+          repo.changeCurrentPassword(
+            currentPassword: 'Hostel@123',
+            newPassword: 'NewPass@456',
+          ),
+          completes,
+        );
+      },
+    );
 
     test('throws when current password is wrong', () async {
       await expectLater(
@@ -137,16 +139,18 @@ void main() {
       expect(find.text('Password updated'), findsOneWidget);
     });
 
-    testWidgets('Change password button is visible on profile screen',
-        (tester) async {
+    testWidgets('Change password button is visible on profile screen', (
+      tester,
+    ) async {
       await pumpApp(tester);
       await goTo(tester, AppRoutes.profile);
 
       expect(find.text('Change password'), findsOneWidget);
     });
 
-    testWidgets('Change password button navigates to ChangePasswordScreen',
-        (tester) async {
+    testWidgets('Change password button navigates to ChangePasswordScreen', (
+      tester,
+    ) async {
       await pumpApp(tester);
       await goTo(tester, AppRoutes.profile);
 
