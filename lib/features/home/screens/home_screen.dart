@@ -84,7 +84,12 @@ class HomeScreen extends ConsumerWidget {
                 onBell: () => context.go(AppRoutes.inbox),
               ),
               const SizedBox(height: 20),
-              _StatusCard(student: student, now: now, status: status),
+              _StatusCard(
+                student: student,
+                now: now,
+                status: status,
+                onHistory: () => context.push(AppRoutes.attendance),
+              ),
               const SizedBox(height: 24),
               const _SectionTitle('Quick actions'),
               const SizedBox(height: 12),
@@ -208,11 +213,13 @@ class _StatusCard extends StatelessWidget {
     required this.student,
     required this.now,
     required this.status,
+    required this.onHistory,
   });
 
   final Student student;
   final DateTime now;
   final PresenceStatus status;
+  final VoidCallback onHistory;
 
   static const _headline = TextStyle(
     color: Colors.white,
@@ -330,11 +337,26 @@ class _StatusCard extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.6),
               ),
               const SizedBox(width: 8),
-              Text(
-                curfewMessage(now),
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 12,
+              Expanded(
+                child: Text(
+                  curfewMessage(now),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: onHistory,
+                child: Text(
+                  'View history',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.white.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ],

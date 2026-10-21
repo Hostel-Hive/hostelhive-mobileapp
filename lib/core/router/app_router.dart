@@ -9,6 +9,7 @@ import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/password_changed_screen.dart';
 import '../../features/auth/screens/reset_password_screen.dart';
+import '../../features/attendance/screens/attendance_screen.dart';
 import '../../features/complaints/screens/complaint_detail_screen.dart';
 import '../../features/complaints/screens/complaint_submitted_screen.dart';
 import '../../features/complaints/screens/submit_complaint_screen.dart';
@@ -41,6 +42,7 @@ class AppRoutes {
   static const goingHomeRecorded = '/going-home/recorded';
   static const inbox = '/inbox';
   static const profile = '/profile';
+  static const attendance = '/attendance';
   static const newComplaint = '/complaints/new';
   static const qr = '/qr';
   static const scanResult = '/scan-result';
@@ -212,6 +214,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/inbox/:id',
         builder: (context, state) =>
             AnnouncementDetailScreen(itemId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: AppRoutes.attendance,
+        builder: (context, state) => const AttendanceScreen(),
       ),
       GoRoute(
         path: AppRoutes.qr,

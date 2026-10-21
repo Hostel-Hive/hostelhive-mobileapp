@@ -6,6 +6,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ## [Unreleased]
 
 ### Added
+- Attendance history screen: day-grouped IN/OUT gate-scan records with timestamps, current presence status badge, and a late-entry flag for unapproved scans (FR012-013, UC007-008). Accessible from the "View history" link on the Home status card.
+
+
 - Flutter project structure for Android and iOS with `flutter_lints` and a Riverpod-based placeholder home screen.
 - GitHub Actions CI pipeline (format, analyze, tests with an 80% coverage gate, APK build, dependency scan).
 - Dependabot configuration, pull request template, `.env.example`, README and contribution guide.
