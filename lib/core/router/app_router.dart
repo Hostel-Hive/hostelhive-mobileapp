@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/repositories/auth_repository.dart';
 import '../../features/auth/providers/auth_providers.dart';
+import '../../features/auth/screens/change_password_screen.dart';
 import '../../features/auth/screens/first_login_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
@@ -34,6 +35,7 @@ class AppRoutes {
   static const firstLogin = '/first-login';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
+  static const changePassword = '/change-password';
   static const passwordChanged = '/password-changed';
   static const home = '/home';
   static const passes = '/passes';
@@ -115,6 +117,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               state.uri.queryParameters['token'] ??
               MockAuthRepository.demoResetToken,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.changePassword,
+        builder: (context, state) => const ChangePasswordScreen(),
       ),
       GoRoute(
         path: AppRoutes.passwordChanged,

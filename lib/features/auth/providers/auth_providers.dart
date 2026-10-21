@@ -83,6 +83,18 @@ class AuthController extends Notifier<AuthState> {
     });
   }
 
+  Future<String?> changeCurrentPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) {
+    return _run(
+      () => _repository.changeCurrentPassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      ),
+    );
+  }
+
   Future<String?> requestPasswordReset(String email) {
     return _run(() => _repository.requestPasswordReset(email.trim()));
   }
