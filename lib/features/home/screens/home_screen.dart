@@ -31,18 +31,26 @@ Pass? activeRequest(List<Pass> passes, DateTime now) {
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  void _goingHome(BuildContext context, bool isOut) {
-    if (isOut) {
+  void _goingHome(BuildContext context, PresenceStatus status) {
+    final blocked = switch (status) {
+      PresenceStatus.outside => 'You are already marked as out.',
+      PresenceStatus.unknown =>
+        'Your status is unknown. Scan your ID at the gate first.',
+      PresenceStatus.inside => null,
+    };
+    if (blocked != null) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('You are already marked as out on leave.'),
-          ),
-        );
+        ..showSnackBar(SnackBar(content: Text(blocked)));
       return;
     }
     context.push(AppRoutes.goingHome);
+  }
+
+  Future<void> _refresh(WidgetRef ref) async {
+    ref.invalidate(passesProvider);
+    ref.invalidate(inboxProvider);
+    await ref.read(authControllerProvider.notifier).refreshProfile();
   }
 
   @override
@@ -51,7 +59,9 @@ class HomeScreen extends ConsumerWidget {
     final now = ref.watch(clockProvider)();
     final passes = ref.watch(passesProvider).valueOrNull ?? const <Pass>[];
     final unread = ref.watch(unreadCountProvider);
-    final isOut = isOutsideOnLeave(passes);
+    final status = isOutsideOnLeave(passes)
+        ? PresenceStatus.outside
+        : student?.presence ?? PresenceStatus.unknown;
     final active = activeRequest(passes, now);
 
     if (student == null) {
@@ -61,31 +71,35 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-          children: [
-            _Header(
-              student: student,
-              greeting: greetingFor(now),
-              hasUnread: unread > 0,
-              onBell: () => context.go(AppRoutes.inbox),
-            ),
-            const SizedBox(height: 20),
-            _StatusCard(student: student, now: now, isOut: isOut),
-            const SizedBox(height: 24),
-            const _SectionTitle('Quick actions'),
-            const SizedBox(height: 12),
-            _QuickActions(onGoingHome: () => _goingHome(context, isOut)),
-            if (active != null) ...[
-              const SizedBox(height: 24),
-              const _SectionTitle('Active request'),
-              const SizedBox(height: 12),
-              PassCard(
-                pass: active,
-                onView: () => context.push('/passes/${active.id}'),
+        child: RefreshIndicator(
+          onRefresh: () => _refresh(ref),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            children: [
+              _Header(
+                student: student,
+                greeting: greetingFor(now),
+                hasUnread: unread > 0,
+                onBell: () => context.go(AppRoutes.inbox),
               ),
+              const SizedBox(height: 20),
+              _StatusCard(student: student, now: now, status: status),
+              const SizedBox(height: 24),
+              const _SectionTitle('Quick actions'),
+              const SizedBox(height: 12),
+              _QuickActions(onGoingHome: () => _goingHome(context, status)),
+              if (active != null) ...[
+                const SizedBox(height: 24),
+                const _SectionTitle('Active request'),
+                const SizedBox(height: 12),
+                PassCard(
+                  pass: active,
+                  onView: () => context.push('/passes/${active.id}'),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -193,12 +207,12 @@ class _StatusCard extends StatelessWidget {
   const _StatusCard({
     required this.student,
     required this.now,
-    required this.isOut,
+    required this.status,
   });
 
   final Student student;
   final DateTime now;
-  final bool isOut;
+  final PresenceStatus status;
 
   static const _headline = TextStyle(
     color: Colors.white,
@@ -209,7 +223,11 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = isOut ? AppColors.warning : AppColors.success;
+    final accent = switch (status) {
+      PresenceStatus.inside => AppColors.success,
+      PresenceStatus.outside => AppColors.warning,
+      PresenceStatus.unknown => AppColors.mutedLight,
+    };
     final room = student.roomNo;
 
     return Container(
@@ -257,7 +275,11 @@ class _StatusCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isOut ? 'OUT ON LEAVE' : 'SIGNED IN',
+                  switch (status) {
+                    PresenceStatus.inside => 'SIGNED IN',
+                    PresenceStatus.outside => 'OUT',
+                    PresenceStatus.unknown => 'STATUS UNKNOWN',
+                  },
                   style: TextStyle(
                     fontFamily: AppFonts.mono,
                     color: accent,
@@ -269,11 +291,18 @@ class _StatusCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          if (isOut) ...[
-            const Text('You’re out on leave.', style: _headline),
+          if (status == PresenceStatus.outside) ...[
+            const Text('You’re out of the hostel.', style: _headline),
             const SizedBox(height: 6),
             const Text(
               'Scan your ID at the gate when you return.',
+              style: TextStyle(color: Colors.white70, fontSize: 13),
+            ),
+          ] else if (status == PresenceStatus.unknown) ...[
+            const Text('Your status is unknown.', style: _headline),
+            const SizedBox(height: 6),
+            const Text(
+              'Scan your ID at the gate to update it.',
               style: TextStyle(color: Colors.white70, fontSize: 13),
             ),
           ] else ...[

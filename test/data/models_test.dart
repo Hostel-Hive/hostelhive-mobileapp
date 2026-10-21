@@ -81,7 +81,7 @@ void main() {
 
     test('given copyWith, then only the given fields change', () {
       final updated = student().copyWith(
-        isInside: false,
+        presence: PresenceStatus.outside,
         mustChangePassword: true,
       );
 

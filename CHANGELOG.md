@@ -24,6 +24,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Profile (Me): student details with room, guardian and contact information, a shortcut to the QR code, and sign out with confirmation.
 - Home dashboard with greeting, in/out status, curfew countdown, quick actions and the active request, inside a bottom navigation shell (Home, Passes, Inbox, Me) with an unread dot on Inbox.
 - Backend connection: an authenticated API client, Firebase email sign-in with token refresh, student role check, first-time setup completion and the student profile loaded from the backend. Runs on demo data when `API_BASE_URL` and `FIREBASE_API_KEY` are not set.
+- Home shows the student's real IN, OUT or UNKNOWN status from the gate scans, with pull-to-refresh on Home and Me, and My QR shows the QR code issued by the backend.
 
 ### Changed
 - Students sign in with their university email only; the Student ID login was removed.

@@ -1,3 +1,17 @@
+/// Where the gate scans last recorded the student (IN, OUT or UNKNOWN).
+enum PresenceStatus { inside, outside, unknown }
+
+PresenceStatus presenceFromString(String? value) {
+  switch (value?.toUpperCase()) {
+    case 'IN':
+      return PresenceStatus.inside;
+    case 'OUT':
+      return PresenceStatus.outside;
+    default:
+      return PresenceStatus.unknown;
+  }
+}
+
 /// Student profile, combining the STUDENT, USER, BED and GUARDIAN entities
 /// (SDS 2.2.7).
 class Student {
@@ -16,7 +30,7 @@ class Student {
     this.guardianName,
     this.guardianRelation,
     this.guardianPhone,
-    this.isInside = true,
+    this.presence = PresenceStatus.inside,
     this.mustChangePassword = false,
   });
 
@@ -36,7 +50,9 @@ class Student {
       guardianName: json['guardian_name'] as String?,
       guardianRelation: json['guardian_relation'] as String?,
       guardianPhone: json['guardian_phone'] as String?,
-      isInside: json['is_inside'] as bool? ?? true,
+      presence: json['is_inside'] == false
+          ? PresenceStatus.outside
+          : PresenceStatus.inside,
       mustChangePassword: json['must_change_password'] as bool? ?? false,
     );
   }
@@ -72,7 +88,7 @@ class Student {
       guardianName: nonEmpty(guardian?['name']),
       guardianRelation: nonEmpty(guardian?['relationship']),
       guardianPhone: nonEmpty(guardian?['contact_phone']),
-      isInside: presence != 'OUT',
+      presence: presenceFromString(presence),
     );
   }
 
@@ -90,7 +106,7 @@ class Student {
   final String? guardianName;
   final String? guardianRelation;
   final String? guardianPhone;
-  final bool isInside;
+  final PresenceStatus presence;
   final bool mustChangePassword;
 
   String get firstName {
@@ -129,7 +145,9 @@ class Student {
     ].whereType<String>().join(' · ');
   }
 
-  Student copyWith({bool? isInside, bool? mustChangePassword}) {
+  bool get isInside => presence == PresenceStatus.inside;
+
+  Student copyWith({PresenceStatus? presence, bool? mustChangePassword}) {
     return Student(
       studentId: studentId,
       indexNo: indexNo,
@@ -145,7 +163,7 @@ class Student {
       guardianName: guardianName,
       guardianRelation: guardianRelation,
       guardianPhone: guardianPhone,
-      isInside: isInside ?? this.isInside,
+      presence: presence ?? this.presence,
       mustChangePassword: mustChangePassword ?? this.mustChangePassword,
     );
   }

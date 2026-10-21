@@ -55,50 +55,55 @@ class ProfileScreen extends ConsumerWidget {
       ),
       body: student == null
           ? const Center(child: Text('Please sign in again.'))
-          : ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                _Hero(
-                  student: student,
-                  onShowQr: () => context.push(AppRoutes.qr),
-                ),
-                const SizedBox(height: 24),
-                const _SectionTitle('Account'),
-                const SizedBox(height: 12),
-                if (student.roomSummary.isNotEmpty)
-                  _InfoTile(
-                    icon: Icons.home_outlined,
-                    color: AppColors.cyan,
-                    title: 'Room assignment',
-                    subtitle: student.roomSummary,
+          : RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(authControllerProvider.notifier).refreshProfile(),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                children: [
+                  _Hero(
+                    student: student,
+                    onShowQr: () => context.push(AppRoutes.qr),
                   ),
-                if (student.guardianName != null)
+                  const SizedBox(height: 24),
+                  const _SectionTitle('Account'),
+                  const SizedBox(height: 12),
+                  if (student.roomSummary.isNotEmpty)
+                    _InfoTile(
+                      icon: Icons.home_outlined,
+                      color: AppColors.cyan,
+                      title: 'Room assignment',
+                      subtitle: student.roomSummary,
+                    ),
+                  if (student.guardianName != null)
+                    _InfoTile(
+                      icon: Icons.shield_outlined,
+                      color: AppColors.success,
+                      title: 'Guardian & emergency',
+                      subtitle: [
+                        student.guardianName,
+                        student.guardianPhone,
+                      ].whereType<String>().join(' · '),
+                    ),
                   _InfoTile(
-                    icon: Icons.shield_outlined,
-                    color: AppColors.success,
-                    title: 'Guardian & emergency',
+                    icon: Icons.mail_outline,
+                    color: const Color(0xFF8B5CF6),
+                    title: 'Contact details',
                     subtitle: [
-                      student.guardianName,
-                      student.guardianPhone,
+                      student.email,
+                      student.phone,
                     ].whereType<String>().join(' · '),
                   ),
-                _InfoTile(
-                  icon: Icons.mail_outline,
-                  color: const Color(0xFF8B5CF6),
-                  title: 'Contact details',
-                  subtitle: [
-                    student.email,
-                    student.phone,
-                  ].whereType<String>().join(' · '),
-                ),
-                const SizedBox(height: 12),
-                PrimaryButton(
-                  label: 'Sign out',
-                  isOutlined: true,
-                  isDestructive: true,
-                  onPressed: () => _confirmSignOut(context, ref),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  PrimaryButton(
+                    label: 'Sign out',
+                    isOutlined: true,
+                    isDestructive: true,
+                    onPressed: () => _confirmSignOut(context, ref),
+                  ),
+                ],
+              ),
             ),
     );
   }
