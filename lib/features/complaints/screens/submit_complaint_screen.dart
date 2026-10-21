@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/uuid.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/error_banner.dart';
 import '../../../core/widgets/primary_app_bar.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../data/api/api_exception.dart';
 import '../../../data/models/complaint.dart';
 import '../../../data/repositories/exceptions.dart';
 import '../providers/complaint_providers.dart';
@@ -26,28 +28,22 @@ class SubmitComplaintScreen extends ConsumerStatefulWidget {
 
 class _SubmitComplaintScreenState extends ConsumerState<SubmitComplaintScreen> {
   static const _icons = {
-    'Safety': Icons.gpp_bad_outlined,
-    'Facilities': Icons.home_outlined,
-    'Food & Mess': Icons.folder_outlined,
-    'People': Icons.people_outline,
-    'Wi-Fi / IT': Icons.signal_cellular_alt,
-    'Other': Icons.filter_list,
+    'Maintenance': Icons.build_outlined,
+    'Disciplinary': Icons.gavel_outlined,
   };
 
   final _formKey = GlobalKey<FormState>();
-  final _title = TextEditingController();
   final _description = TextEditingController();
   final List<String> _photos = [];
   String? _category;
   bool _categoryMissing = false;
-  ComplaintSeverity _severity = ComplaintSeverity.normal;
+  String _requestId = newUuid();
   bool _loading = false;
   String? _error;
   String? _photoError;
 
   @override
   void dispose() {
-    _title.dispose();
     _description.dispose();
     super.dispose();
   }
@@ -103,18 +99,25 @@ class _SubmitComplaintScreenState extends ConsumerState<SubmitComplaintScreen> {
           .read(complaintsProvider.notifier)
           .submit(
             category: _category!,
-            title: _title.text,
             description: _description.text,
-            severity: _severity,
             imagePaths: _photos,
+            requestId: _requestId,
           );
       if (!mounted) return;
       context.pushReplacement('/complaints/${complaint.id}/submitted');
+    } on PhotoUploadException catch (e) {
+      // The complaint is saved, so go on to the confirmation and say which
+      // part failed instead of asking the student to submit it again.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+      context.pushReplacement('/complaints/${e.complaintId}/submitted');
     } on RepositoryException catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
         _error = e.message;
+        if (e is! NetworkException) _requestId = newUuid();
       });
     }
   }
@@ -135,15 +138,9 @@ class _SubmitComplaintScreenState extends ConsumerState<SubmitComplaintScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '${_severity.label} · responded within '
-                '${_severity.responseHours} hours',
-                style: TextStyle(
-                  color: _severity == ComplaintSeverity.critical
-                      ? AppColors.dangerDark
-                      : AppColors.muted,
-                  fontSize: 12,
-                ),
+              const Text(
+                'The warden office will review your complaint.',
+                style: TextStyle(color: AppColors.muted, fontSize: 12),
               ),
               const SizedBox(height: 10),
               PrimaryButton(
@@ -181,22 +178,6 @@ class _SubmitComplaintScreenState extends ConsumerState<SubmitComplaintScreen> {
                   ),
                 ),
               const SizedBox(height: 20),
-              const _SectionLabel('Severity'),
-              const SizedBox(height: 10),
-              _SeverityPicker(
-                selected: _severity,
-                onChanged: (value) => setState(() => _severity = value),
-              ),
-              const SizedBox(height: 20),
-              AppTextField(
-                label: 'Short title',
-                hintText: 'e.g. Emergency exit blocked by laundry rack',
-                controller: _title,
-                labelColor: AppColors.navy,
-                textInputAction: TextInputAction.next,
-                validator: (v) => Validators.required(v, field: 'Title'),
-              ),
-              const SizedBox(height: 16),
               AppTextField(
                 label: 'Description',
                 hintText: 'Describe what is wrong and where',
@@ -275,12 +256,12 @@ class _CategoryGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 3,
+      crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
-      childAspectRatio: 1.35,
+      childAspectRatio: 2.2,
       children: [
         for (final entry in icons.entries)
           Semantics(
@@ -329,80 +310,6 @@ class _CategoryGrid extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _SeverityPicker extends StatelessWidget {
-  const _SeverityPicker({required this.selected, required this.onChanged});
-
-  final ComplaintSeverity selected;
-  final ValueChanged<ComplaintSeverity> onChanged;
-
-  static const _dots = {
-    ComplaintSeverity.normal: AppColors.success,
-    ComplaintSeverity.high: AppColors.warning,
-    ComplaintSeverity.critical: AppColors.danger,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: AppColors.border.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          for (final severity in ComplaintSeverity.values)
-            Expanded(
-              child: Semantics(
-                button: true,
-                selected: severity == selected,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: () => onChanged(severity),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: severity == selected
-                          ? AppColors.surface
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _dots[severity],
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          severity.label,
-                          style: TextStyle(
-                            color: severity == selected
-                                ? AppColors.navy
-                                : AppColors.secondary,
-                            fontSize: 13,
-                            fontWeight: severity == selected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }

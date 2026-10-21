@@ -30,10 +30,9 @@ class RejectingComplaintRepository extends MockComplaintRepository {
   @override
   Future<Complaint> submitComplaint({
     required String category,
-    required String title,
     required String description,
-    required ComplaintSeverity severity,
     List<String> imagePaths = const [],
+    String? requestId,
   }) async {
     throw const RepositoryException('The warden office is closed.');
   }
@@ -43,14 +42,12 @@ class ResolvedComplaintRepository extends MockComplaintRepository {
   ResolvedComplaintRepository()
     : super(clock: () => fixedNow, latency: Duration.zero);
 
-  @override
-  Future<List<Complaint>> fetchComplaints() async => [
+  static final _items = [
     Complaint(
       id: 'CMP-0001',
-      category: 'Facilities',
+      category: 'Maintenance',
       title: 'Leaking tap',
       description: 'Tap in the corridor leaks.',
-      severity: ComplaintSeverity.high,
       status: ComplaintStatus.resolved,
       submittedAt: fixedNow.subtract(const Duration(days: 3)),
       imagePaths: const ['/missing/photo.jpg'],
@@ -58,14 +55,20 @@ class ResolvedComplaintRepository extends MockComplaintRepository {
     ),
     Complaint(
       id: 'CMP-0002',
-      category: 'Other',
+      category: 'Disciplinary',
       title: 'Loose handle',
       description: 'Door handle is loose.',
-      severity: ComplaintSeverity.normal,
       status: ComplaintStatus.open,
       submittedAt: fixedNow.subtract(const Duration(hours: 1)),
     ),
   ];
+
+  @override
+  Future<List<Complaint>> fetchComplaints() async => _items;
+
+  @override
+  Future<Complaint> fetchComplaint(String id) async =>
+      _items.firstWhere((c) => c.id == id);
 }
 
 const jpg = PickedImage(path: '/photos/a.jpg', sizeBytes: 1000);
@@ -119,19 +122,20 @@ void main() {
       final created = await container
           .read(complaintsProvider.notifier)
           .submit(
-            category: 'Facilities',
-            title: 'Leak',
-            description: 'Water',
-            severity: ComplaintSeverity.high,
+            category: 'Maintenance',
+            description: 'Water leak\nin the hall',
           );
 
       expect(created.id, 'CMP-0143');
       expect(container.read(complaintsProvider).value!.length, 2);
-      expect(
-        container.read(complaintByIdProvider('CMP-0143')).value!.title,
-        'Leak',
+      final detail = await container.read(
+        complaintDetailProvider('CMP-0143').future,
       );
-      expect(container.read(complaintByIdProvider('nope')).hasError, isTrue);
+      expect(detail.title, 'Water leak');
+      await expectLater(
+        container.read(complaintDetailProvider('nope').future),
+        throwsA(isA<RepositoryException>()),
+      );
     });
 
     test('the default providers can be created', () {
@@ -174,15 +178,14 @@ void main() {
     }
 
     Future<void> fillText(WidgetTester tester) async {
-      await tester.enterText(find.byType(TextFormField).at(0), 'Leaking tap');
       await tester.enterText(
-        find.byType(TextFormField).at(1),
+        find.byType(TextFormField).first,
         'Water on the floor',
       );
     }
 
     testWidgets(
-      'given the form is empty, then category, title and description are required',
+      'given the form is empty, then category and description are required',
       (tester) async {
         await openForm(tester);
 
@@ -190,23 +193,19 @@ void main() {
         await tester.pump();
 
         expect(find.text('Choose a category'), findsOneWidget);
-        expect(find.text('Title is required'), findsOneWidget);
         expect(find.text('Description is required'), findsOneWidget);
       },
     );
 
-    testWidgets('given the severity changes, then the response time updates', (
+    testWidgets('given the form, then both categories are offered', (
       tester,
     ) async {
       await openForm(tester);
 
-      expect(find.text('Normal · responded within 48 hours'), findsOneWidget);
-      await tester.tap(find.text('High'));
-      await tester.pump();
-      expect(find.text('High · responded within 12 hours'), findsOneWidget);
-      await tester.tap(find.text('Critical'));
-      await tester.pump();
-      expect(find.text('Critical · responded within 2 hours'), findsOneWidget);
+      expect(find.text('Maintenance'), findsOneWidget);
+      expect(find.text('Disciplinary'), findsOneWidget);
+      expect(find.text('Severity'), findsNothing);
+      expect(find.text('Short title'), findsNothing);
     });
 
     testWidgets(
@@ -214,8 +213,7 @@ void main() {
       (tester) async {
         await openForm(tester);
 
-        await tester.tap(find.text('Facilities'));
-        await tester.tap(find.text('High'));
+        await tester.tap(find.text('Maintenance'));
         await fillText(tester);
         await tester.tap(find.text('Submit complaint'));
         await tester.pumpAndSettle();
@@ -227,12 +225,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('#CMP-0143'), findsOneWidget);
-        expect(find.text('Leaking tap'), findsOneWidget);
-        expect(find.text('HIGH'), findsOneWidget);
-        expect(
-          find.text('Routed to Facilities category · SLA 12 hours.'),
-          findsOneWidget,
-        );
+        expect(find.text('Water on the floor'), findsWidgets);
+        expect(find.text('Routed to the Maintenance team.'), findsOneWidget);
       },
     );
 
@@ -240,7 +234,7 @@ void main() {
       tester,
     ) async {
       await openForm(tester);
-      await tester.tap(find.text('Other'));
+      await tester.tap(find.text('Disciplinary'));
       await fillText(tester);
       await tester.tap(find.text('Submit complaint'));
       await tester.pumpAndSettle();
@@ -262,11 +256,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(picker.requested, [PhotoSource.gallery]);
-      expect(find.text('1 / 5 added'), findsOneWidget);
+      expect(find.text('1 / 3 added'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Remove photo 1'));
       await tester.pump();
-      expect(find.text('0 / 5 added'), findsOneWidget);
+      expect(find.text('0 / 3 added'), findsOneWidget);
     });
 
     testWidgets('given a camera photo, then the camera source is used', (
@@ -280,7 +274,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(picker.requested, [PhotoSource.camera]);
-      expect(find.text('1 / 5 added'), findsOneWidget);
+      expect(find.text('1 / 3 added'), findsOneWidget);
     });
 
     testWidgets('given the photo choice is cancelled, then nothing is added', (
@@ -294,7 +288,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(picker.requested.length, 1);
-      expect(find.text('0 / 5 added'), findsOneWidget);
+      expect(find.text('0 / 3 added'), findsOneWidget);
     });
 
     testWidgets(
@@ -325,7 +319,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Please use a JPG or PNG photo.'), findsOneWidget);
-        expect(find.text('0 / 5 added'), findsOneWidget);
+        expect(find.text('0 / 3 added'), findsOneWidget);
       },
     );
 
@@ -350,18 +344,18 @@ void main() {
       expect(find.textContaining('larger than 5 MB'), findsOneWidget);
     });
 
-    testWidgets('given five photos, then the add tile disappears', (
+    testWidgets('given three photos, then the add tile disappears', (
       tester,
     ) async {
       await openForm(
         tester,
         photos: [
-          for (var i = 0; i < 5; i++)
+          for (var i = 0; i < 3; i++)
             PickedImage(path: '/p/$i.png', sizeBytes: 10),
         ],
       );
 
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 3; i++) {
         await tester.ensureVisible(find.text('Add'));
         await tester.tap(find.text('Add'));
         await tester.pumpAndSettle();
@@ -369,7 +363,7 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.text('5 / 5 added'), findsOneWidget);
+      expect(find.text('3 / 3 added'), findsOneWidget);
       expect(find.text('Add'), findsNothing);
     });
 
@@ -384,7 +378,7 @@ void main() {
             ),
           ],
         );
-        await tester.tap(find.text('Safety'));
+        await tester.tap(find.text('Maintenance'));
         await fillText(tester);
 
         await tester.tap(find.text('Submit complaint'));
@@ -425,14 +419,10 @@ void main() {
         expect(find.text('#CMP-0142'), findsOneWidget);
         expect(find.text('Emergency exit blocked'), findsOneWidget);
         expect(find.text('ONGOING'), findsOneWidget);
-        expect(find.text('CRITICAL'), findsOneWidget);
         expect(find.text('UPDATES'), findsOneWidget);
         expect(find.text('STUDENT'), findsOneWidget);
         expect(find.text('Original report with 4 photos.'), findsOneWidget);
-        expect(
-          find.text('Routed to Safety category · SLA 2 hours.'),
-          findsOneWidget,
-        );
+        expect(find.text('Routed to the Maintenance team.'), findsOneWidget);
         expect(find.text('Completed'), findsOneWidget);
       },
     );
@@ -470,7 +460,6 @@ void main() {
       await pushTo(tester, '/complaints/CMP-0002');
 
       expect(find.text('OPEN'), findsOneWidget);
-      expect(find.text('NORMAL'), findsOneWidget);
       expect(find.byIcon(Icons.check), findsNothing);
     });
 

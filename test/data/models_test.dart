@@ -175,17 +175,15 @@ void main() {
     test('given a JSON map, then it is parsed', () {
       final c = Complaint.fromJson({
         'id': 'CMP-1',
-        'category': 'Safety',
+        'category': 'Maintenance',
         'title': 'Exit blocked',
         'description': 'Rack in the way',
-        'severity': 'critical',
         'status': 'in progress',
         'submitted_at': '2026-04-18T10:00:00.000',
         'image_urls': ['a.jpg', 'b.png'],
         'resolution_note': 'Cleared',
       });
 
-      expect(c.severity, ComplaintSeverity.critical);
       expect(c.status, ComplaintStatus.ongoing);
       expect(c.imagePaths, ['a.jpg', 'b.png']);
       expect(c.resolutionNote, 'Cleared');
@@ -201,7 +199,6 @@ void main() {
         'submitted_at': '2026-04-18T10:00:00.000',
       });
 
-      expect(c.severity, ComplaintSeverity.normal);
       expect(c.status, ComplaintStatus.open);
       expect(c.imagePaths, isEmpty);
     });
@@ -214,20 +211,67 @@ void main() {
       expect(ComplaintStatus.resolved.label, 'Completed');
     });
 
-    test('given severities, then labels and SLA hours match the policy', () {
-      expect(complaintSeverityFromString('HIGH'), ComplaintSeverity.high);
-      expect(ComplaintSeverity.normal.label, 'Normal');
-      expect(ComplaintSeverity.high.label, 'High');
-      expect(ComplaintSeverity.critical.label, 'Critical');
-      expect(ComplaintSeverity.normal.responseHours, 48);
-      expect(ComplaintSeverity.high.responseHours, 12);
-      expect(ComplaintSeverity.critical.responseHours, 2);
+    test('the categories and photo limit match the backend', () {
+      expect(complaintCategories, ['Maintenance', 'Disciplinary']);
+      expect(complaintCategoryCode('Maintenance'), 'maintenance');
+      expect(complaintCategoryLabel('disciplinary'), 'Disciplinary');
+      expect(complaintCategoryLabel(''), '');
+      expect(maxComplaintImages, 3);
     });
 
-    test('the category list matches the design', () {
-      expect(complaintCategories, contains('Wi-Fi / IT'));
-      expect(complaintCategories.length, 6);
-      expect(maxComplaintImages, 5);
+    test('given a long description, then the title is its first line', () {
+      expect(complaintTitleFrom('Light broken\nin room C-214'), 'Light broken');
+      expect(complaintTitleFrom('  short  '), 'short');
+      final long = complaintTitleFrom('x' * 100);
+      expect(long.length, 60);
+      expect(long, endsWith('...'));
+    });
+
+    test('given a backend complaint, then it is mapped', () {
+      final c = Complaint.fromBackendJson({
+        'complaint_id': '5a1b2c3d-0000-4000-8000-000000000001',
+        'category': 'maintenance',
+        'description': 'The room light is not working.',
+        'status': 'in_progress',
+        'version': 3,
+        'created_at': '2026-10-15T14:20:00Z',
+      });
+
+      expect(c.category, 'Maintenance');
+      expect(c.status, ComplaintStatus.ongoing);
+      expect(c.version, 3);
+      expect(c.title, 'The room light is not working.');
+      expect(c.displayId, 'CMP-5A1B2C3D');
+    });
+
+    test('given a readable id, then it is shown as it is', () {
+      final c = Complaint.fromBackendJson({
+        'complaint_id': 'CMP-1',
+        'category': 'maintenance',
+        'description': 'd',
+        'status': 'pending',
+        'created_at': '2026-10-15T14:20:00Z',
+      });
+
+      expect(c.displayId, 'CMP-1');
+      expect(c.version, 1);
+      expect(c.status, ComplaintStatus.open);
+    });
+
+    test('given copyWith, then only the given fields change', () {
+      final c = Complaint.fromBackendJson({
+        'complaint_id': 'CMP-1',
+        'category': 'maintenance',
+        'description': 'd',
+        'status': 'pending',
+        'created_at': '2026-10-15T14:20:00Z',
+      });
+      final updated = c.copyWith(version: 4, imageIds: ['i1']);
+
+      expect(updated.version, 4);
+      expect(updated.imageIds, ['i1']);
+      expect(updated.description, 'd');
+      expect(c.copyWith().version, 1);
     });
   });
 

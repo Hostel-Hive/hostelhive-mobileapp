@@ -5,10 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/uuid.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/primary_app_bar.dart';
 import '../../../core/widgets/status_badge.dart';
+import '../../../data/api/api_exception.dart';
 import '../../../data/models/complaint.dart';
+import '../../../data/repositories/exceptions.dart';
 import '../providers/complaint_providers.dart';
 
 class ComplaintDetailScreen extends ConsumerWidget {
@@ -18,11 +21,13 @@ class ComplaintDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final complaint = ref.watch(complaintByIdProvider(complaintId));
+    final complaint = ref.watch(complaintDetailProvider(complaintId));
 
     return Scaffold(
       backgroundColor: AppColors.formBackground,
-      appBar: PrimaryAppBar(title: '#$complaintId'),
+      appBar: PrimaryAppBar(
+        title: '#${complaint.valueOrNull?.displayId ?? complaintId}',
+      ),
       body: complaint.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) =>
@@ -34,7 +39,7 @@ class ComplaintDetailScreen extends ConsumerWidget {
   }
 }
 
-class _Detail extends StatelessWidget {
+class _Detail extends ConsumerWidget {
   const _Detail({required this.complaint, required this.now});
 
   final Complaint complaint;
@@ -63,7 +68,7 @@ class _Detail extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final latest = complaint.updates.isEmpty
         ? complaint.submittedAt
         : complaint.updates
@@ -89,8 +94,6 @@ class _Detail extends StatelessWidget {
                     status: complaint.status.name,
                     label: complaint.status.label,
                   ),
-                  const SizedBox(width: 8),
-                  _SeverityTag(complaint.severity),
                 ],
               ),
               const SizedBox(height: 14),
@@ -121,12 +124,15 @@ class _Detail extends StatelessWidget {
             height: 1.5,
           ),
         ),
-        if (complaint.imagePaths.isNotEmpty) ...[
+        if (complaint.imagePaths.isNotEmpty ||
+            complaint.imageIds.isNotEmpty) ...[
           const SizedBox(height: 16),
           Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
+              for (final imageId in complaint.imageIds)
+                _BackendPhoto(complaintId: complaint.id, imageId: imageId),
               for (final path in complaint.imagePaths)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(14),
@@ -185,47 +191,135 @@ class _Detail extends StatelessWidget {
             const SizedBox(height: 10),
           ],
         ],
+        if (complaint.status != ComplaintStatus.resolved) ...[
+          const SizedBox(height: 14),
+          _NoteBox(complaint: complaint),
+        ],
       ],
     );
   }
 }
 
-class _SeverityTag extends StatelessWidget {
-  const _SeverityTag(this.severity);
+/// One photo of the complaint, downloaded with the student's token.
+class _BackendPhoto extends ConsumerWidget {
+  const _BackendPhoto({required this.complaintId, required this.imageId});
 
-  final ComplaintSeverity severity;
+  final String complaintId;
+  final String imageId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final image = ref.watch(
+      complaintImageProvider((complaintId: complaintId, imageId: imageId)),
+    );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 76,
+        height: 76,
+        color: AppColors.surfaceTint,
+        alignment: Alignment.center,
+        child: image.when(
+          loading: () => const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          error: (_, _) =>
+              const Icon(Icons.broken_image_outlined, color: AppColors.navy),
+          data: (bytes) => Image.memory(
+            bytes,
+            width: 76,
+            height: 76,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) =>
+                const Icon(Icons.image_outlined, color: AppColors.navy),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Lets the student add a note to a complaint that is still open.
+class _NoteBox extends ConsumerStatefulWidget {
+  const _NoteBox({required this.complaint});
+
+  final Complaint complaint;
+
+  @override
+  ConsumerState<_NoteBox> createState() => _NoteBoxState();
+}
+
+class _NoteBoxState extends ConsumerState<_NoteBox> {
+  final _controller = TextEditingController();
+  String _requestId = newUuid();
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _sending) return;
+    setState(() => _sending = true);
+    try {
+      await ref
+          .read(complaintsProvider.notifier)
+          .addNote(
+            complaintId: widget.complaint.id,
+            text: text,
+            expectedVersion: widget.complaint.version,
+            requestId: _requestId,
+          );
+      _controller.clear();
+      _requestId = newUuid();
+    } on RepositoryException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+      if (e is! NetworkException) _requestId = newUuid();
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final critical = severity == ComplaintSeverity.critical;
-    final high = severity == ComplaintSeverity.high;
-    final background = critical
-        ? AppColors.dangerSoft
-        : high
-        ? AppColors.warningSoft
-        : AppColors.successSoft;
-    final foreground = critical
-        ? AppColors.dangerDark
-        : high
-        ? AppColors.warningDark
-        : AppColors.successDark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        severity.label.toUpperCase(),
-        style: TextStyle(
-          fontFamily: AppFonts.mono,
-          color: foreground,
-          fontSize: 9,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 1,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            minLines: 1,
+            maxLines: 4,
+            maxLength: 2000,
+            decoration: InputDecoration(
+              hintText: 'Add a note',
+              counterText: '',
+              filled: true,
+              fillColor: AppColors.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+            ),
+          ),
         ),
-      ),
+        const SizedBox(width: 10),
+        IconButton.filled(
+          tooltip: 'Send note',
+          style: IconButton.styleFrom(backgroundColor: AppColors.navy),
+          onPressed: _sending ? null : _send,
+          icon: const Icon(Icons.send, size: 18, color: Colors.white),
+        ),
+      ],
     );
   }
 }

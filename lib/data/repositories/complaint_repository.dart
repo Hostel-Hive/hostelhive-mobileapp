@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../models/complaint.dart';
 import 'exceptions.dart';
 
@@ -5,12 +7,29 @@ import 'exceptions.dart';
 abstract class ComplaintRepository {
   Future<List<Complaint>> fetchComplaints();
   Future<Complaint> fetchComplaint(String id);
+
+  /// Creates the complaint, then attaches the photos one by one. Throws a
+  /// [PhotoUploadException] when it was saved but a photo failed.
   Future<Complaint> submitComplaint({
     required String category,
-    required String title,
     required String description,
-    required ComplaintSeverity severity,
     List<String> imagePaths = const [],
+    String? requestId,
+  });
+
+  /// Adds a student note to an open complaint; [expectedVersion] must be the
+  /// latest version the student has seen.
+  Future<ComplaintUpdate> addNote({
+    required String complaintId,
+    required String text,
+    required int expectedVersion,
+    String? requestId,
+  });
+
+  /// The bytes of one attached photo.
+  Future<Uint8List> fetchImage({
+    required String complaintId,
+    required String imageId,
   });
 }
 
@@ -23,13 +42,12 @@ class MockComplaintRepository implements ComplaintRepository {
     _complaints.add(
       Complaint(
         id: 'CMP-0142',
-        category: 'Safety',
+        category: 'Maintenance',
         title: 'Emergency exit blocked',
         description:
             'Laundry rack placed at the rear stairwell near rooms C-301 to '
             'C-308 is blocking the fire exit. There is barely 30 cm of '
             'clearance.',
-        severity: ComplaintSeverity.critical,
         status: ComplaintStatus.ongoing,
         submittedAt: now.subtract(const Duration(hours: 4)),
         updates: [
@@ -41,7 +59,7 @@ class MockComplaintRepository implements ComplaintRepository {
           ),
           ComplaintUpdate(
             author: 'System',
-            text: 'Routed to Safety category · SLA 2 hours.',
+            text: 'Routed to the Maintenance team.',
             createdAt: now.subtract(const Duration(hours: 4)),
             isSystem: true,
           ),
@@ -77,15 +95,12 @@ class MockComplaintRepository implements ComplaintRepository {
   @override
   Future<Complaint> submitComplaint({
     required String category,
-    required String title,
     required String description,
-    required ComplaintSeverity severity,
     List<String> imagePaths = const [],
+    String? requestId,
   }) async {
     await _wait();
-    if (category.trim().isEmpty ||
-        title.trim().isEmpty ||
-        description.trim().isEmpty) {
+    if (category.trim().isEmpty || description.trim().isEmpty) {
       throw const RepositoryException(
         'Please choose a category and describe the issue.',
       );
@@ -100,9 +115,8 @@ class MockComplaintRepository implements ComplaintRepository {
     final complaint = Complaint(
       id: 'CMP-${number.toString().padLeft(4, '0')}',
       category: category,
-      title: title.trim(),
+      title: complaintTitleFrom(description),
       description: description.trim(),
-      severity: severity,
       status: ComplaintStatus.open,
       submittedAt: now,
       imagePaths: List.unmodifiable(imagePaths),
@@ -117,9 +131,7 @@ class MockComplaintRepository implements ComplaintRepository {
         ),
         ComplaintUpdate(
           author: 'System',
-          text:
-              'Routed to $category category · SLA '
-              '${severity.responseHours} hours.',
+          text: 'Routed to the $category team.',
           createdAt: now,
           isSystem: true,
         ),
@@ -127,5 +139,50 @@ class MockComplaintRepository implements ComplaintRepository {
     );
     _complaints.add(complaint);
     return complaint;
+  }
+
+  @override
+  Future<ComplaintUpdate> addNote({
+    required String complaintId,
+    required String text,
+    required int expectedVersion,
+    String? requestId,
+  }) async {
+    await _wait();
+    final index = _complaints.indexWhere((c) => c.id == complaintId);
+    if (index == -1) {
+      throw const RepositoryException('Complaint not found.');
+    }
+    final complaint = _complaints[index];
+    if (text.trim().isEmpty) {
+      throw const RepositoryException('Please write a note first.');
+    }
+    if (complaint.status == ComplaintStatus.resolved) {
+      throw const RepositoryException('This complaint is already resolved.');
+    }
+    if (expectedVersion != complaint.version) {
+      throw const RepositoryException(
+        'The complaint changed. Refresh and try again.',
+      );
+    }
+    final update = ComplaintUpdate(
+      author: 'You',
+      text: text.trim(),
+      createdAt: _clock(),
+      isStudent: true,
+    );
+    _complaints[index] = complaint.copyWith(
+      version: complaint.version + 1,
+      updates: [...complaint.updates, update],
+    );
+    return update;
+  }
+
+  @override
+  Future<Uint8List> fetchImage({
+    required String complaintId,
+    required String imageId,
+  }) {
+    throw const RepositoryException('Photos are not available offline.');
   }
 }
