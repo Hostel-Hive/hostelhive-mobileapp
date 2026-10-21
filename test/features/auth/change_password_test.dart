@@ -4,7 +4,6 @@ import 'package:hostelhive_mobile/core/router/app_router.dart';
 import 'package:hostelhive_mobile/data/repositories/auth_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/exceptions.dart';
 import 'package:hostelhive_mobile/data/repositories/session_store.dart';
-import 'package:hostelhive_mobile/features/auth/providers/auth_providers.dart';
 import 'package:hostelhive_mobile/features/auth/screens/change_password_screen.dart';
 
 import '../../helpers/harness.dart';
