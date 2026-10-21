@@ -70,6 +70,30 @@ class FirebaseAuthService implements TokenSource {
     await _store.clear();
   }
 
+  /// Changes the password for the currently signed-in user (FR006).
+  ///
+  /// Firebase issues a new token pair on success; the stored session is
+  /// updated so the next request uses the fresh tokens without re-login.
+  Future<void> updatePassword(String newPassword) async {
+    final token = await idToken();
+    if (token == null) throw const AuthException('Please sign in again.');
+    final body = await _post(
+      '$_identity/accounts:update',
+      jsonEncode({
+        'idToken': token,
+        'password': newPassword,
+        'returnSecureToken': true,
+      }),
+      'application/json',
+    );
+    _remember(
+      idToken: body['idToken'] as String,
+      expiresIn: body['expiresIn'] as String,
+    );
+    final rotated = body['refreshToken'] as String?;
+    if (rotated != null) await _store.write(rotated);
+  }
+
   @override
   Future<String?> idToken({bool forceRefresh = false}) async {
     final expiresAt = _expiresAt;

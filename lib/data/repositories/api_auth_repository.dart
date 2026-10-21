@@ -68,6 +68,12 @@ class ApiAuthRepository implements AuthRepository {
     );
   }
 
+  @override
+  Future<void> changeCurrentPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) => _auth.updatePassword(newPassword);
+
   Future<Student> _loadStudent() async {
     final me = await _api.getJson('/me') as Map<String, dynamic>;
     if (me['role'] != 'student') {
