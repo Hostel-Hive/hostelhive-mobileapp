@@ -4,11 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hostelhive_mobile/app.dart';
 import 'package:hostelhive_mobile/core/providers/clock_provider.dart';
+import 'package:hostelhive_mobile/data/repositories/attendance_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/auth_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/complaint_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/inbox_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/pass_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/session_store.dart';
+import 'package:hostelhive_mobile/features/attendance/providers/attendance_providers.dart';
 import 'package:hostelhive_mobile/features/auth/providers/auth_providers.dart';
 import 'package:hostelhive_mobile/features/complaints/providers/complaint_providers.dart';
 import 'package:hostelhive_mobile/features/inbox/providers/inbox_providers.dart';
@@ -47,6 +49,9 @@ Future<void> pumpApp(
         ),
         inboxRepositoryProvider.overrideWithValue(
           MockInboxRepository(clock: () => clock, latency: Duration.zero),
+        ),
+        attendanceRepositoryProvider.overrideWithValue(
+          MockAttendanceRepository(latency: Duration.zero),
         ),
         ...overrides,
       ],
