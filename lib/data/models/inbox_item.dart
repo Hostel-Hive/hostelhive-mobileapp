@@ -25,6 +25,9 @@ class InboxItem {
     required this.createdAt,
     this.isRead = false,
     this.tag,
+    this.notificationId,
+    this.sourceType,
+    this.sourceId,
   });
 
   factory InboxItem.fromJson(Map<String, dynamic> json) {
@@ -48,6 +51,29 @@ class InboxItem {
 
   /// Category pill such as SAFETY, FACILITIES or LATE ACCESS.
   final String? tag;
+
+  /// The backend inbox entry to mark as read, when there is one.
+  final String? notificationId;
+
+  /// What an alert is about (`leave`, `late_access` or `complaint`) and the id
+  /// of that record, so the alert can open it.
+  final String? sourceType;
+  final String? sourceId;
+
+  /// The screen that shows the record behind an alert, if it has one.
+  String? get sourceRoute {
+    final id = sourceId;
+    if (id == null) return null;
+    switch (sourceType) {
+      case 'leave':
+      case 'late_access':
+        return '/passes/$id';
+      case 'complaint':
+        return '/complaints/$id';
+      default:
+        return null;
+    }
+  }
 
   /// Everything except plain announcements is shown under the Alerts tab.
   bool get isAlert => kind != InboxItemKind.announcement;
@@ -75,6 +101,9 @@ class InboxItem {
       createdAt: createdAt,
       isRead: isRead ?? this.isRead,
       tag: tag,
+      notificationId: notificationId,
+      sourceType: sourceType,
+      sourceId: sourceId,
     );
   }
 }

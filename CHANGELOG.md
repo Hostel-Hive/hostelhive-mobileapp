@@ -27,8 +27,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Home shows the student's real IN, OUT or UNKNOWN status from the gate scans, with pull-to-refresh on Home and Me, and My QR shows the QR code issued by the backend.
 - Passes from the backend: one combined list of leave and late-access requests, the 18-day allowance, leave and late-access requests, cancel for pending requests and going home as a declaration that the next gate scan completes.
 - Complaints from the backend: submit with a category and description, up to three photos uploaded one by one with a clear message when one fails, a detail screen with timeline and private photos, and notes on open complaints.
+- Inbox from the backend: announcements with their full text and alerts about leave, late access and complaints that open the related record, with unread dots that update when a message is read.
 
 ### Changed
+- The Inbox no longer has a "Mark all as read" button; messages are marked read when opened.
 - Complaints no longer have a title or severity, and the categories are Maintenance and Disciplinary, to match the backend.
 - The request form is now "Request a pass" with a Leave or Late access choice; purpose and destination were removed because the backend does not store them.
 - Students sign in with their university email only; the Student ID login was removed.

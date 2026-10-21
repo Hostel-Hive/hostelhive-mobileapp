@@ -1,10 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/providers/clock_provider.dart';
+import '../../../data/api/api_providers.dart';
 import '../../../data/models/inbox_item.dart';
+import '../../../data/repositories/api_inbox_repository.dart';
 import '../../../data/repositories/inbox_repository.dart';
 
 final inboxRepositoryProvider = Provider<InboxRepository>((ref) {
+  if (ref.watch(appConfigProvider).useBackend) {
+    return ApiInboxRepository(ref.watch(apiClientProvider));
+  }
   return MockInboxRepository(clock: ref.watch(clockProvider));
 });
 
@@ -31,11 +37,6 @@ class InboxNotifier extends AsyncNotifier<List<InboxItem>> {
 
   Future<void> markAsRead(String id) async {
     await _repository.markAsRead(id);
-    state = AsyncData(await _repository.fetchItems());
-  }
-
-  Future<void> markAllAsRead() async {
-    await _repository.markAllAsRead();
     state = AsyncData(await _repository.fetchItems());
   }
 }

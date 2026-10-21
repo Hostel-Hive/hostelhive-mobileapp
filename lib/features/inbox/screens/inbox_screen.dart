@@ -44,22 +44,6 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         ),
         centerTitle: false,
         shape: const Border(bottom: BorderSide(color: AppColors.border)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: IconButton(
-              tooltip: 'Mark all as read',
-              style: IconButton.styleFrom(
-                backgroundColor: AppColors.background,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.done_all, size: 20),
-              onPressed: () => ref.read(inboxProvider.notifier).markAllAsRead(),
-            ),
-          ),
-        ],
       ),
       body: inbox.when(
         loading: () => const Center(child: CircularProgressIndicator()),

@@ -268,8 +268,16 @@ void main() {
       await tester.tap(tab('Inbox'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Mark all as read'));
-      await tester.pumpAndSettle();
+      for (final title in [
+        'Curfew drill — Saturday night',
+        'Your LA-2418 was approved',
+        'Laundry schedule change',
+      ]) {
+        await tester.tap(find.text(title));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Got it'));
+        await tester.pumpAndSettle();
+      }
 
       expect(unreadDot, findsNothing);
     });

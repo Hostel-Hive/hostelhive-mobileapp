@@ -578,12 +578,6 @@ void main() {
       expect((await repo.fetchItems()).where((i) => !i.isRead).length, 3);
     });
 
-    test('given markAllAsRead, then nothing is unread', () async {
-      await repo.markAllAsRead();
-
-      expect((await repo.fetchItems()).any((i) => !i.isRead), isFalse);
-    });
-
     test('the default clock and latency can be used', () async {
       expect(await MockInboxRepository().fetchItems(), isNotEmpty);
     });

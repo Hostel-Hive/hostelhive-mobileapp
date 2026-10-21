@@ -104,7 +104,7 @@ void main() {
     });
 
     test(
-      'given markAsRead and markAllAsRead, then the unread count drops',
+      'given each message is marked read, then the unread count drops',
       () async {
         final container = makeContainer();
         await container.read(inboxProvider.future);
@@ -112,7 +112,8 @@ void main() {
         await container.read(inboxProvider.notifier).markAsRead('n1');
         expect(container.read(unreadCountProvider), 2);
 
-        await container.read(inboxProvider.notifier).markAllAsRead();
+        await container.read(inboxProvider.notifier).markAsRead('n2');
+        await container.read(inboxProvider.notifier).markAsRead('n3');
         expect(container.read(unreadCountProvider), 0);
       },
     );
@@ -207,14 +208,24 @@ void main() {
       );
     });
 
-    testWidgets('given Mark all as read, then the banner disappears', (
+    testWidgets('given every message is opened, then the banner disappears', (
       tester,
     ) async {
       await pumpApp(tester);
       await goTo(tester, AppRoutes.inbox);
 
-      await tester.tap(find.byTooltip('Mark all as read'));
-      await tester.pumpAndSettle();
+      for (final title in [
+        'Curfew drill — Saturday night',
+        'Your LA-2418 was approved',
+        'Laundry schedule change',
+      ]) {
+        await tester.tap(find.text(title));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Got it'));
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.byTooltip('Mark all as read'), findsNothing);
 
       expect(find.textContaining('new message'), findsNothing);
       expect(unreadDots, findsNothing);

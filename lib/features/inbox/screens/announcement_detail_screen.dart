@@ -126,7 +126,18 @@ class _Detail extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        PrimaryButton(label: 'Got it', onPressed: onClose),
+        if (item.sourceRoute != null) ...[
+          PrimaryButton(
+            label: 'View details',
+            onPressed: () => context.push(item.sourceRoute!),
+          ),
+          const SizedBox(height: 12),
+        ],
+        PrimaryButton(
+          label: 'Got it',
+          isOutlined: item.sourceRoute != null,
+          onPressed: onClose,
+        ),
       ],
     );
   }
