@@ -10,6 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^2.6.1
+  flutter_secure_storage: ^11.2.0
+  go_router: ^18.1.1
+  http: ^1.6.0
+  image_picker: ^1.2.4
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -18,3 +23,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: PlusJakartaSans
+      fonts:
+        - asset: assets/fonts/PlusJakartaSans.ttf
+        - asset: assets/fonts/PlusJakartaSans-Italic.ttf
+          style: italic
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono.ttf
