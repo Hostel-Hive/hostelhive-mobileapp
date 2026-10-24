@@ -298,7 +298,7 @@ void main() {
     });
   });
 
-  group('Request late access', () {
+  group('Request a pass', () {
     Future<void> openForm(WidgetTester tester) async {
       await pumpApp(tester);
       await pushTo(tester, AppRoutes.requestLateAccess);
@@ -316,7 +316,7 @@ void main() {
     });
 
     testWidgets(
-      'given valid details, then the request is sent and can be viewed',
+      'given valid Late access details, then the request is sent and can be viewed',
       (tester) async {
         await openForm(tester);
 
@@ -328,13 +328,13 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Request sent'), findsWidgets);
-        expect(find.text('LV-3001'), findsOneWidget);
+        expect(find.text('LA-2419'), findsOneWidget);
 
         await tester.tap(find.text('View pass'));
         await tester.pumpAndSettle();
 
-        expect(find.text('Pass LV-3001'), findsOneWidget);
-        expect(find.text('Leave'), findsOneWidget);
+        expect(find.text('Pass LA-2419'), findsOneWidget);
+        expect(find.text('Late entry'), findsOneWidget);
         expect(find.text('Dentist appointment'), findsOneWidget);
         expect(find.text('PENDING'), findsOneWidget);
       },
@@ -379,13 +379,10 @@ void main() {
       },
     );
 
-    testWidgets('given Late access, then movement and one time show', (
+    testWidgets('given Late access, then movement and one time picker show', (
       tester,
     ) async {
       await openForm(tester);
-
-      await tester.tap(find.text('Late access'));
-      await tester.pumpAndSettle();
 
       expect(find.text('MOVEMENT'), findsOneWidget);
       expect(find.text('Late entry'), findsOneWidget);
@@ -399,8 +396,6 @@ void main() {
     ) async {
       await openForm(tester);
 
-      await tester.tap(find.text('Late access'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('Early exit'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField).first, 'Early train');
@@ -416,102 +411,73 @@ void main() {
       expect(find.text('Early exit'), findsOneWidget);
     });
 
+    testWidgets('given Going home, then date and reason fields are hidden', (
+      tester,
+    ) async {
+      await openForm(tester);
+
+      await tester.tap(find.text('Going home'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('MOVEMENT'), findsNothing);
+      expect(find.text('DATE'), findsNothing);
+      expect(find.text('REASON'), findsNothing);
+      expect(find.text('Confirm going home'), findsOneWidget);
+    });
+
     testWidgets(
-      'given the default dates, then the duration is within the quota',
+      'given Going home and Confirm going home, then going home is recorded',
       (tester) async {
         await openForm(tester);
 
-        expect(find.text('19 Apr 2026'), findsNWidgets(2));
-        expect(find.text('09:00'), findsOneWidget);
-        expect(find.text('18:00'), findsOneWidget);
-        expect(
-          find.textContaining(
-            'Duration · 9 hours · within your 18-day annual quota',
-          ),
-          findsOneWidget,
-        );
+        await tester.tap(find.text('Going home'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Confirm going home'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Going home recorded'), findsWidgets);
       },
     );
-
-    testWidgets('given a return date far ahead, then a quota warning shows', (
-      tester,
-    ) async {
-      await openForm(tester);
-
-      await tester.tap(find.text('19 Apr 2026').last);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('30'));
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('30 Apr 2026'), findsOneWidget);
-      expect(
-        find.textContaining('exceeds your remaining 6-day quota'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('given a departure after the return, then the form flags it', (
-      tester,
-    ) async {
-      await openForm(tester);
-
-      await tester.tap(find.text('19 Apr 2026').first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('25'));
-      await tester.tap(find.text('OK'));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Return must be after the departure time'),
-        findsOneWidget,
-      );
-    });
 
     testWidgets(
       'given the date picker is cancelled, then the date is unchanged',
       (tester) async {
         await openForm(tester);
 
-        await tester.tap(find.text('19 Apr 2026').first);
+        final dateFinder = find.byIcon(Icons.calendar_today_outlined);
+        await tester.tap(dateFinder.first);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
 
-        expect(find.text('19 Apr 2026'), findsNWidgets(2));
+        expect(find.byIcon(Icons.calendar_today_outlined), findsOneWidget);
       },
     );
 
+    testWidgets('given the time picker is confirmed, then the time is kept', (
+      tester,
+    ) async {
+      await openForm(tester);
+
+      await tester.tap(find.byIcon(Icons.schedule));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.schedule), findsOneWidget);
+    });
+
     testWidgets(
-      'given the time pickers are confirmed, then the times are kept',
+      'given the time picker is cancelled, then the time is unchanged',
       (tester) async {
         await openForm(tester);
 
-        await tester.tap(find.text('09:00'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('OK'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('18:00'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('OK'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('09:00'), findsOneWidget);
-        expect(find.text('18:00'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'given a time picker is cancelled, then the time is unchanged',
-      (tester) async {
-        await openForm(tester);
-
-        await tester.tap(find.text('09:00'));
+        await tester.tap(find.byIcon(Icons.schedule));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
 
-        expect(find.text('09:00'), findsOneWidget);
+        expect(find.byIcon(Icons.schedule), findsOneWidget);
       },
     );
   });

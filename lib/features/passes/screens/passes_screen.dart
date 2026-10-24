@@ -196,7 +196,9 @@ class _QuotaCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final quota = ref.watch(passQuotaProvider).value;
+    final quotaAsync = ref.watch(passQuotaProvider);
+    if (quotaAsync.hasError) return const SizedBox.shrink();
+    final quota = quotaAsync.value;
 
     return Container(
       padding: const EdgeInsets.all(20),
