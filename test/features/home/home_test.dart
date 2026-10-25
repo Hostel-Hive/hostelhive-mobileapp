@@ -110,9 +110,7 @@ void main() {
   });
 
   group('Home dashboard', () {
-    testWidgets('given a signed-in student, then status shows', (
-      tester,
-    ) async {
+    testWidgets('given a signed-in student, then status shows', (tester) async {
       await pumpApp(tester);
 
       expect(find.text('Good evening,'), findsOneWidget);
