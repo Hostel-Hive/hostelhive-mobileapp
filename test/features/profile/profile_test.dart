@@ -17,10 +17,7 @@ void main() {
         'photo_url': 'https://cdn.example.com/photos/STU-0001.jpg',
       });
 
-      expect(
-        student.photoUrl,
-        'https://cdn.example.com/photos/STU-0001.jpg',
-      );
+      expect(student.photoUrl, 'https://cdn.example.com/photos/STU-0001.jpg');
     });
 
     test('given photo_url is absent, then photoUrl is null', () {
