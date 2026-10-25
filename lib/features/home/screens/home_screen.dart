@@ -12,6 +12,7 @@ import '../../auth/providers/auth_providers.dart';
 import '../../inbox/providers/inbox_providers.dart';
 import '../../passes/providers/pass_providers.dart';
 import '../../passes/widgets/pass_widgets.dart';
+import '../../profile/widgets/student_avatar.dart';
 import '../utils/curfew.dart';
 
 /// The pass shown on the dashboard: a pending request first, otherwise an
@@ -137,23 +138,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 44,
-          height: 44,
-          decoration: const BoxDecoration(
-            color: AppColors.navy,
-            shape: BoxShape.circle,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            student.initials,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
+        StudentAvatar(student: student, size: 44, fontSize: 14),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
