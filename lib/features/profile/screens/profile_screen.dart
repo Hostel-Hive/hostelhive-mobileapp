@@ -152,7 +152,7 @@ class _Hero extends StatelessWidget {
                     width: 88,
                     height: 88,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Text(
+                    errorBuilder: (_, _, _) => Text(
                       student.initials,
                       style: const TextStyle(
                         color: Colors.white,
