@@ -1,6 +1,8 @@
 # HostelHive Mobile App
 
 [![CI](https://github.com/Hostel-Hive/hostelhive-mobileapp/actions/workflows/ci.yml/badge.svg)](https://github.com/Hostel-Hive/hostelhive-mobileapp/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-%E2%89%A580%25%20gate-brightgreen)](.github/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Hostel-Hive/hostelhive-mobileapp)](https://github.com/Hostel-Hive/hostelhive-mobileapp/releases)
 
 Student mobile application for **HostelHive**, the hostel management system of Bulugaha Girls' Hostel, University of Kelaniya. Built with Flutter (SRS 2.4, Technological Constraints).
 
@@ -46,6 +48,9 @@ lib/
   features/    one folder per feature (auth, passes, complaints, inbox, qr, profile, home)
 test/          unit and widget tests
 ```
+
+## Releases
+Tagged releases (`main`) are published under [Releases](https://github.com/Hostel-Hive/hostelhive-mobileapp/releases), each with a downloadable APK built against the real backend. See [CHANGELOG.md](CHANGELOG.md) for what changed in each version.
 
 ## Documentation
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the branching strategy and commit conventions, and [CHANGELOG.md](CHANGELOG.md) for release notes.
