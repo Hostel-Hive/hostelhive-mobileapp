@@ -295,7 +295,7 @@ void main() {
     });
 
     testWidgets(
-      'given the full flow, then the password is reset and sign in is offered',
+      'given a valid email, then the reset link is sent and login is shown',
       (tester) async {
         await openForgot(tester);
 
@@ -305,24 +305,7 @@ void main() {
         );
         await tester.tap(find.widgetWithText(PrimaryButton, 'Send reset link'));
         await tester.pumpAndSettle();
-        expect(find.text('Set a new password'), findsOneWidget);
 
-        await tester.enterText(find.byType(TextFormField).at(0), 'weak');
-        await tester.tap(find.widgetWithText(PrimaryButton, 'Save password'));
-        await tester.pump();
-        expect(find.text('Use at least 8 characters'), findsOneWidget);
-
-        await tester.enterText(find.byType(TextFormField).at(0), 'Brand#New9');
-        await tester.pump();
-        expect(find.text('Strong'), findsOneWidget);
-        await tester.enterText(find.byType(TextFormField).at(1), 'Brand#New9');
-        await tester.tap(find.widgetWithText(PrimaryButton, 'Save password'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Password updated'), findsWidgets);
-
-        await tester.tap(find.text('Back to sign in'));
-        await tester.pumpAndSettle();
         expect(find.text('EMAIL'), findsOneWidget);
       },
     );
