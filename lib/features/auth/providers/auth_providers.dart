@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/config/app_config.dart';
@@ -95,6 +97,43 @@ class AuthController extends Notifier<AuthState> {
     );
   }
 
+  Future<String?> updateProfile({
+    String? phone,
+    String? guardianName,
+    String? guardianRelation,
+    String? guardianPhone,
+  }) {
+    return _run(() async {
+      final student = await _repository.updateProfile(
+        phone: phone,
+        guardianName: guardianName,
+        guardianRelation: guardianRelation,
+        guardianPhone: guardianPhone,
+      );
+      state = AuthState(status: AuthStatus.authenticated, student: student);
+    });
+  }
+
+  Future<String?> uploadProfilePhoto({
+    required Uint8List bytes,
+    required String contentType,
+  }) {
+    return _run(() async {
+      final student = await _repository.uploadProfilePhoto(
+        bytes: bytes,
+        contentType: contentType,
+      );
+      state = AuthState(status: AuthStatus.authenticated, student: student);
+    });
+  }
+
+  Future<String?> removeProfilePhoto() {
+    return _run(() async {
+      final student = await _repository.removeProfilePhoto();
+      state = AuthState(status: AuthStatus.authenticated, student: student);
+    });
+  }
+
   Future<String?> requestPasswordReset(String email) {
     return _run(() => _repository.requestPasswordReset(email.trim()));
   }
@@ -126,3 +165,15 @@ class AuthController extends Notifier<AuthState> {
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(
   AuthController.new,
 );
+
+/// The signed-in student's profile photo bytes, fetched with their token.
+/// Re-runs whenever [AuthState.student]'s [Student.hasPhoto] flips.
+final profilePhotoProvider = FutureProvider.autoDispose<Uint8List?>((
+  ref,
+) async {
+  final student = ref.watch(
+    authControllerProvider.select((state) => state.student),
+  );
+  if (student == null || !student.hasPhoto) return null;
+  return ref.read(authRepositoryProvider).fetchProfilePhoto();
+});

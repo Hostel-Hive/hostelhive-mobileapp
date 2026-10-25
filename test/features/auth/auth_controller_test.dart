@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelhive_mobile/data/repositories/auth_repository.dart';
@@ -158,6 +160,29 @@ void main() {
       await controller.resetPassword(token: 'old', newPassword: 'Brand#New9'),
       contains('expired'),
     );
+  });
+
+  test('given a signed-in student, then uploadProfilePhoto and removeProfilePhoto update hasPhoto', () async {
+    final store = MemorySessionStore();
+    await store.write('STU-0036');
+    final container = makeContainer(store);
+    await settle(container);
+    final controller = container.read(authControllerProvider.notifier);
+
+    expect(container.read(authControllerProvider).student!.hasPhoto, isFalse);
+
+    final uploadError = await controller.uploadProfilePhoto(
+      bytes: Uint8List.fromList([1, 2, 3]),
+      contentType: 'image/jpeg',
+    );
+
+    expect(uploadError, isNull);
+    expect(container.read(authControllerProvider).student!.hasPhoto, isTrue);
+
+    final removeError = await controller.removeProfilePhoto();
+
+    expect(removeError, isNull);
+    expect(container.read(authControllerProvider).student!.hasPhoto, isFalse);
   });
 
   test('given signOut, then the session ends', () async {

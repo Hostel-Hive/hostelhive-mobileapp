@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../api/api_client.dart';
 import '../api/api_exception.dart';
 import '../api/firebase_auth_service.dart';
@@ -12,6 +14,8 @@ class ApiAuthRepository implements AuthRepository {
 
   final FirebaseAuthService _auth;
   final ApiClient _api;
+  String? _email;
+  Student? _student;
 
   @override
   Future<Student> login(String emailOrId, String password) async {
@@ -72,7 +76,83 @@ class ApiAuthRepository implements AuthRepository {
   Future<void> changeCurrentPassword({
     required String currentPassword,
     required String newPassword,
-  }) => _auth.updatePassword(newPassword);
+  }) async {
+    final email = _email;
+    if (email == null) throw const AuthException('Please sign in again.');
+    await _auth.reauthenticate(email: email, password: currentPassword);
+    await _auth.updatePassword(newPassword);
+  }
+
+  @override
+  Future<Student> updateProfile({
+    String? phone,
+    String? guardianName,
+    String? guardianRelation,
+    String? guardianPhone,
+  }) async {
+    final hasGuardianEdit =
+        guardianName != null ||
+        guardianRelation != null ||
+        guardianPhone != null;
+    if (hasGuardianEdit &&
+        (guardianName == null ||
+            guardianRelation == null ||
+            guardianPhone == null)) {
+      throw const RepositoryException(
+        'Enter the guardian\'s name, relationship and phone together.',
+      );
+    }
+    final body = <String, dynamic>{
+      if (phone != null) 'contact_phone': phone.trim(),
+      if (hasGuardianEdit)
+        'guardians': [
+          {
+            'name': guardianName!.trim(),
+            'relationship': guardianRelation!.trim(),
+            'contact_phone': guardianPhone!.trim(),
+          },
+        ],
+    };
+    final profile = await _api.patchJson(
+      '/me/student-profile',
+      body: body,
+    ) as Map<String, dynamic>;
+    final student = Student.fromProfileJson(profile);
+    _email = student.email;
+    _student = student;
+    return student;
+  }
+
+  @override
+  Future<Uint8List> fetchProfilePhoto() =>
+      _api.getBytes('/me/student-profile/image');
+
+  @override
+  Future<Student> uploadProfilePhoto({
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    await _api.putBytes(
+      '/me/student-profile/image',
+      bytes: bytes,
+      contentType: contentType,
+    );
+    return _withPhoto(true);
+  }
+
+  @override
+  Future<Student> removeProfilePhoto() async {
+    await _api.delete('/me/student-profile/image');
+    return _withPhoto(false);
+  }
+
+  Student _withPhoto(bool hasPhoto) {
+    final student = _student;
+    if (student == null) throw const AuthException('Please sign in again.');
+    final updated = student.copyWith(hasPhoto: hasPhoto);
+    _student = updated;
+    return updated;
+  }
 
   Future<Student> _loadStudent() async {
     final me = await _api.getJson('/me') as Map<String, dynamic>;
@@ -87,7 +167,10 @@ class ApiAuthRepository implements AuthRepository {
     try {
       final profile =
           await _api.getJson('/me/student-profile') as Map<String, dynamic>;
-      return Student.fromProfileJson(profile);
+      final student = Student.fromProfileJson(profile);
+      _email = student.email;
+      _student = student;
+      return student;
     } on ApiException catch (e) {
       if (e.isNotFound) {
         throw const AuthException(

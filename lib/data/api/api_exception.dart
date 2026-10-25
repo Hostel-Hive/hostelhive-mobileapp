@@ -11,6 +11,7 @@ class ApiException extends RepositoryException {
 
   bool get isUnauthorized => statusCode == 401;
   bool get isNotFound => statusCode == 404;
+  bool get isGone => statusCode == 410;
 }
 
 /// The phone could not reach the server at all.

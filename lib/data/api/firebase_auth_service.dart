@@ -70,6 +70,23 @@ class FirebaseAuthService implements TokenSource {
     await _store.clear();
   }
 
+  /// Confirms [password] is still correct for [email] without changing the
+  /// stored session. Throws [AuthException] when it is not.
+  Future<void> reauthenticate({
+    required String email,
+    required String password,
+  }) async {
+    await _post(
+      '$_identity/accounts:signInWithPassword',
+      jsonEncode({
+        'email': email.trim(),
+        'password': password,
+        'returnSecureToken': true,
+      }),
+      'application/json',
+    );
+  }
+
   /// Changes the password for the currently signed-in user (FR006).
   ///
   /// Firebase issues a new token pair on success; the stored session is

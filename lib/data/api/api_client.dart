@@ -48,6 +48,12 @@ class ApiClient {
     return _decode(response);
   }
 
+  /// PATCH with a JSON body.
+  Future<dynamic> patchJson(String path, {required Object body}) async {
+    final response = await _send('PATCH', path, jsonBody: body);
+    return _decode(response);
+  }
+
   /// PUT raw bytes, for photo uploads.
   Future<dynamic> putBytes(
     String path, {
