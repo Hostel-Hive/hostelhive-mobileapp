@@ -47,11 +47,7 @@ class AppRoutes {
   static const scanResult = '/scan-result';
 
   /// Screens a signed-out student may open.
-  static const publicRoutes = {
-    login,
-    forgotPassword,
-    passwordChanged,
-  };
+  static const publicRoutes = {login, forgotPassword, passwordChanged};
 }
 
 /// Decides where a student must be sent for the current session.

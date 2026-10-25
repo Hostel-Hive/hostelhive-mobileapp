@@ -51,7 +51,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Reset link sent. Check your email to set a new password.'),
+        content: Text(
+          'Reset link sent. Check your email to set a new password.',
+        ),
       ),
     );
     context.go(AppRoutes.login);
