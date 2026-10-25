@@ -491,7 +491,6 @@ void main() {
 
       expect(find.text('This complaint was not found.'), findsOneWidget);
     });
-
   });
 
   group('Complaints list', () {
