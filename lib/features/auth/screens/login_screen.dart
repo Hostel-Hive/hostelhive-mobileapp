@@ -222,11 +222,6 @@ class _Footer extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          const Text(
-            "Bulugaha Girls' Hostel · University of Kelaniya",
-            style: TextStyle(color: AppColors.mutedLight, fontSize: 11),
-          ),
         ],
       ),
     );

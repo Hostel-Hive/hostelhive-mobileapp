@@ -295,16 +295,6 @@ class _StatusCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "BULUGAHA GIRLS' HOSTEL · UNIVERSITY OF KELANIYA",
-            style: TextStyle(
-              fontFamily: AppFonts.mono,
-              color: Colors.white.withValues(alpha: 0.55),
-              fontSize: 10,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 14),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
