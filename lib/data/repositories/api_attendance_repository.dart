@@ -9,10 +9,17 @@ class ApiAttendanceRepository implements AttendanceRepository {
 
   @override
   Future<AttendanceSummary> fetchSummary() async {
-    final body = await _api.getJson(
-      '/students/me/attendance',
+    final profile =
+        await _api.getJson('/me/student-profile') as Map<String, dynamic>;
+    final events = await _api.getJson(
+      '/me/attendance/events',
       query: {'limit': '100'},
     ) as Map<String, dynamic>;
-    return AttendanceSummary.fromJson(body);
+    final presence =
+        (profile['presence'] as Map<String, dynamic>?)?['status'] as String?;
+    return AttendanceSummary.fromBackendJson(
+      presenceStatus: presence ?? 'UNKNOWN',
+      movements: events['items'] as List<dynamic>? ?? const [],
+    );
   }
 }
