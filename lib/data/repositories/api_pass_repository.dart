@@ -107,7 +107,10 @@ class ApiPassRepository implements PassRepository {
 
   @override
   Future<void> cancelPass(String passId) async {
-    await _tryBoth((base) => _api.postJson('$base/$passId/cancel'));
+    // The ordinary leave workflow is retired: /leaves/{id}/cancel always
+    // answers 410 rather than 404, so it cannot be used to detect "not a
+    // leave" here. Only late-access requests can still be cancelled.
+    await _api.postJson('/late-access-requests/$passId/cancel');
   }
 
   /// Runs [call] against `/leaves`, and against `/late-access-requests` when

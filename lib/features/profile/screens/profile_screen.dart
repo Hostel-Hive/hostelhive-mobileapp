@@ -97,6 +97,12 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   PrimaryButton(
+                    label: 'Edit profile',
+                    isOutlined: true,
+                    onPressed: () => context.push(AppRoutes.editProfile),
+                  ),
+                  const SizedBox(height: 12),
+                  PrimaryButton(
                     label: 'Change password',
                     isOutlined: true,
                     onPressed: () => context.push(AppRoutes.changePassword),

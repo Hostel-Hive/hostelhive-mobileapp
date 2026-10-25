@@ -83,6 +83,7 @@ void main() {
       await pumpApp(tester);
       await goTo(tester, AppRoutes.profile);
 
+      await tester.scrollUntilVisible(find.text('Sign out'), 200);
       await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
       expect(find.text('Sign out?'), findsOneWidget);
@@ -99,6 +100,7 @@ void main() {
         await pumpApp(tester);
         await goTo(tester, AppRoutes.profile);
 
+        await tester.scrollUntilVisible(find.text('Sign out'), 200);
         await tester.tap(find.text('Sign out'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Stay signed in'));

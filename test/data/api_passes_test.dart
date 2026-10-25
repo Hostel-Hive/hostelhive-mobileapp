@@ -379,28 +379,18 @@ void main() {
       },
     );
 
-    test('given a leave, then cancelling posts without a body', () async {
-      handler = (request) async => json(leaveJson(status: 'cancelled'));
+    test(
+      'given a pass id, then cancelling posts to late access without a body',
+      () async {
+        handler = (request) async => json(lateJson(status: 'cancelled'));
 
-      await build().cancelPass(leaveId);
+        await build().cancelPass(lateId);
 
-      expect(path(calls.single), '/leaves/$leaveId/cancel');
-      expect(calls.single.method, 'POST');
-      expect(calls.single.body, isEmpty);
-    });
-
-    test('given late access, then cancelling falls back to it', () async {
-      handler = (request) async => path(request).startsWith('/leaves')
-          ? json({'error': 'not_found'}, 404)
-          : json(lateJson(status: 'cancelled'));
-
-      await build().cancelPass(lateId);
-
-      expect(calls.map(path), [
-        '/leaves/$lateId/cancel',
-        '/late-access-requests/$lateId/cancel',
-      ]);
-    });
+        expect(path(calls.single), '/late-access-requests/$lateId/cancel');
+        expect(calls.single.method, 'POST');
+        expect(calls.single.body, isEmpty);
+      },
+    );
   });
 
   group('providers', () {

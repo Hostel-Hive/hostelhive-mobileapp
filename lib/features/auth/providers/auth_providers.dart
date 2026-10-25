@@ -95,6 +95,23 @@ class AuthController extends Notifier<AuthState> {
     );
   }
 
+  Future<String?> updateProfile({
+    String? phone,
+    String? guardianName,
+    String? guardianRelation,
+    String? guardianPhone,
+  }) {
+    return _run(() async {
+      final student = await _repository.updateProfile(
+        phone: phone,
+        guardianName: guardianName,
+        guardianRelation: guardianRelation,
+        guardianPhone: guardianPhone,
+      );
+      state = AuthState(status: AuthStatus.authenticated, student: student);
+    });
+  }
+
   Future<String?> requestPasswordReset(String email) {
     return _run(() => _repository.requestPasswordReset(email.trim()));
   }

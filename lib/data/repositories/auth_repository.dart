@@ -24,6 +24,16 @@ abstract class AuthRepository {
     required String newPassword,
   });
 
+  /// Edits the student's own contact phone and/or guardian (SDS 2.2.7). Pass
+  /// null to leave a field unchanged; the three guardian fields are
+  /// all-or-nothing since the backend replaces the guardian as one record.
+  Future<Student> updateProfile({
+    String? phone,
+    String? guardianName,
+    String? guardianRelation,
+    String? guardianPhone,
+  });
+
   Future<void> logout();
   Future<Student?> currentUser();
 }
@@ -184,6 +194,25 @@ class MockAuthRepository implements AuthRepository {
       throw const AuthException('Choose a stronger password.');
     }
     account.password = newPassword;
+  }
+
+  @override
+  Future<Student> updateProfile({
+    String? phone,
+    String? guardianName,
+    String? guardianRelation,
+    String? guardianPhone,
+  }) async {
+    await _wait();
+    final account = await _signedIn();
+    if (account == null) throw const AuthException('Please sign in again.');
+    account.student = account.student.copyWith(
+      phone: phone,
+      guardianName: guardianName,
+      guardianRelation: guardianRelation,
+      guardianPhone: guardianPhone,
+    );
+    return account.student;
   }
 
   @override

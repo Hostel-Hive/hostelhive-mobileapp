@@ -139,6 +139,7 @@ void main() {
 
       await tester.tap(find.text('Me'));
       await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.text('Sign out'), 200);
       await tester.tap(find.text('Sign out'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Sign out').last);

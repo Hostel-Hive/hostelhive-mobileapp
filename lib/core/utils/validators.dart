@@ -21,6 +21,16 @@ class Validators {
     return null;
   }
 
+  static String? phone(String? value) {
+    final empty = required(value, field: 'Phone number');
+    if (empty != null) return empty;
+    final pattern = RegExp(r'^[+()0-9 -]{7,32}$');
+    if (!pattern.hasMatch(value!.trim())) {
+      return 'Enter a valid phone number';
+    }
+    return null;
+  }
+
   static String? Function(String?) matches(String Function() other) {
     return (value) {
       if (value == null || value.isEmpty) return 'Please confirm your password';
