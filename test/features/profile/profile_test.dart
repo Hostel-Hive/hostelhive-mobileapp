@@ -1,11 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelhive_mobile/core/router/app_router.dart';
+import 'package:hostelhive_mobile/data/models/student.dart';
 import 'package:hostelhive_mobile/features/qr/screens/my_qr_screen.dart';
 
 import '../../helpers/harness.dart';
 
 void main() {
+  group('Student.fromProfileJson', () {
+    test('given photo_url is present, then photoUrl is set', () {
+      final student = Student.fromProfileJson({
+        'student_id': 'STU-0001',
+        'index_no': 'SE/2021/001',
+        'full_name': 'Test Student',
+        'email': 'test@example.com',
+        'photo_url': 'https://cdn.example.com/photos/STU-0001.jpg',
+      });
+
+      expect(student.photoUrl, 'https://cdn.example.com/photos/STU-0001.jpg');
+    });
+
+    test('given photo_url is absent, then photoUrl is null', () {
+      final student = Student.fromProfileJson({
+        'student_id': 'STU-0001',
+        'index_no': 'SE/2021/001',
+        'full_name': 'Test Student',
+        'email': 'test@example.com',
+      });
+
+      expect(student.photoUrl, isNull);
+    });
+
+    test('given photo_url is empty string, then photoUrl is null', () {
+      final student = Student.fromProfileJson({
+        'student_id': 'STU-0001',
+        'index_no': 'SE/2021/001',
+        'full_name': 'Test Student',
+        'email': 'test@example.com',
+        'photo_url': '',
+      });
+
+      expect(student.photoUrl, isNull);
+    });
+  });
+
   group('Profile screen', () {
     testWidgets('given a signed-in student, then their details show', (
       tester,
@@ -79,6 +117,15 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Sanuthi Perera'), findsOneWidget);
+    });
+
+    testWidgets('given a student with no photo, then initials show', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await goTo(tester, AppRoutes.profile);
+
+      expect(find.text('SP'), findsOneWidget);
     });
   });
 }
