@@ -276,8 +276,8 @@ class _GoingHomePoints extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        children: const [
+      child: const Column(
+        children: [
           _Point('Your declaration is recorded for the hostel.'),
           _Point('No warden approval is needed during normal hours.'),
           _Point('Scan your ID card at the gate when you leave and return.'),
