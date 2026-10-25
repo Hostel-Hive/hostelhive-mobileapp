@@ -13,6 +13,7 @@ import '../../features/auth/screens/reset_password_screen.dart';
 import '../../features/attendance/screens/attendance_screen.dart';
 import '../../features/complaints/screens/complaint_detail_screen.dart';
 import '../../features/complaints/screens/complaint_submitted_screen.dart';
+import '../../features/complaints/screens/complaints_screen.dart';
 import '../../features/complaints/screens/submit_complaint_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/home/screens/home_shell.dart';
@@ -45,6 +46,7 @@ class AppRoutes {
   static const inbox = '/inbox';
   static const profile = '/profile';
   static const attendance = '/attendance';
+  static const complaints = '/complaints';
   static const newComplaint = '/complaints/new';
   static const qr = '/qr';
   static const scanResult = '/scan-result';
@@ -198,9 +200,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
-        path: '/complaints',
-        redirect: (context, state) => AppRoutes.home,
-        builder: (context, state) => const SizedBox.shrink(),
+        path: AppRoutes.complaints,
+        builder: (context, state) => const ComplaintsScreen(),
       ),
       GoRoute(
         path: AppRoutes.newComplaint,

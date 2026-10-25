@@ -38,6 +38,14 @@ class RejectingComplaintRepository extends MockComplaintRepository {
   }
 }
 
+class EmptyComplaintRepository extends MockComplaintRepository {
+  EmptyComplaintRepository()
+    : super(clock: () => fixedNow, latency: Duration.zero);
+
+  @override
+  Future<List<Complaint>> fetchComplaints() async => [];
+}
+
 class ResolvedComplaintRepository extends MockComplaintRepository {
   ResolvedComplaintRepository()
     : super(clock: () => fixedNow, latency: Duration.zero);
@@ -389,10 +397,22 @@ void main() {
       },
     );
 
-    testWidgets('given the home button, then the form opens', (tester) async {
-      await pumpApp(tester);
+    testWidgets('given the home My complaints button, then the form opens', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        overrides: [
+          complaintRepositoryProvider.overrideWithValue(
+            EmptyComplaintRepository(),
+          ),
+        ],
+      );
 
-      await tester.tap(find.text('Report an issue'));
+      await tester.tap(find.text('My complaints'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Report an issue'));
       await tester.pumpAndSettle();
 
       expect(find.text('Submit complaint'), findsOneWidget);
@@ -472,13 +492,96 @@ void main() {
       expect(find.text('This complaint was not found.'), findsOneWidget);
     });
 
-    testWidgets('given the complaints list path, then it redirects home', (
+  });
+
+  group('Complaints list', () {
+    testWidgets('given complaints exist, then they show with status and id', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        overrides: [
+          complaintRepositoryProvider.overrideWithValue(
+            ResolvedComplaintRepository(),
+          ),
+        ],
+      );
+      await goTo(tester, '/complaints');
+
+      expect(find.text('My complaints'), findsOneWidget);
+      expect(find.text('Leaking tap'), findsOneWidget);
+      expect(find.text('Loose handle'), findsOneWidget);
+      expect(find.textContaining('CMP-0001'), findsOneWidget);
+      expect(find.textContaining('CMP-0002'), findsOneWidget);
+    });
+
+    testWidgets('given no complaints, then the empty state shows', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        overrides: [
+          complaintRepositoryProvider.overrideWithValue(
+            EmptyComplaintRepository(),
+          ),
+        ],
+      );
+      await goTo(tester, '/complaints');
+
+      expect(find.text('No complaints yet'), findsOneWidget);
+      expect(find.text('Report an issue'), findsOneWidget);
+    });
+
+    testWidgets('given a complaint row, then tapping opens the detail', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        overrides: [
+          complaintRepositoryProvider.overrideWithValue(
+            ResolvedComplaintRepository(),
+          ),
+        ],
+      );
+      await goTo(tester, '/complaints');
+
+      await tester.tap(find.text('Leaking tap'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('#CMP-0001'), findsOneWidget);
+    });
+
+    testWidgets('given the FAB, then tapping opens the submit form', (
       tester,
     ) async {
       await pumpApp(tester);
       await goTo(tester, '/complaints');
 
-      expect(find.text('Hello, Sanuthi'), findsOneWidget);
+      await tester.tap(find.byTooltip('Report an issue'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Submit complaint'), findsOneWidget);
     });
+
+    testWidgets(
+      'given the home My complaints tile, then it opens the complaints list',
+      (tester) async {
+        await pumpApp(
+          tester,
+          overrides: [
+            complaintRepositoryProvider.overrideWithValue(
+              EmptyComplaintRepository(),
+            ),
+          ],
+        );
+        await goTo(tester, '/home');
+
+        await tester.tap(find.text('My complaints'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('My complaints'), findsWidgets);
+        expect(find.text('No complaints yet'), findsOneWidget);
+      },
+    );
   });
 }

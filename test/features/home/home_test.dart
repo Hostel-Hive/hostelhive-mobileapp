@@ -2,13 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hostelhive_mobile/core/router/app_router.dart';
 import 'package:hostelhive_mobile/data/models/pass.dart';
+import 'package:hostelhive_mobile/data/models/complaint.dart';
+import 'package:hostelhive_mobile/data/repositories/complaint_repository.dart';
 import 'package:hostelhive_mobile/data/repositories/pass_repository.dart';
+import 'package:hostelhive_mobile/features/complaints/providers/complaint_providers.dart';
 import 'package:hostelhive_mobile/features/home/screens/home_screen.dart';
 import 'package:hostelhive_mobile/features/home/utils/curfew.dart';
 import 'package:hostelhive_mobile/features/passes/providers/pass_providers.dart';
 import 'package:hostelhive_mobile/features/qr/screens/my_qr_screen.dart';
 
 import '../../helpers/harness.dart';
+
+class EmptyComplaintRepository extends MockComplaintRepository {
+  EmptyComplaintRepository()
+    : super(clock: () => fixedNow, latency: Duration.zero);
+
+  @override
+  Future<List<Complaint>> fetchComplaints() async => [];
+}
 
 class NoPassesRepository extends MockPassRepository {
   NoPassesRepository() : super(clock: () => fixedNow, latency: Duration.zero);
@@ -167,10 +178,22 @@ void main() {
       expect(find.text('Submit to warden'), findsOneWidget);
     });
 
-    testWidgets('given Report an issue, then the form opens', (tester) async {
-      await pumpApp(tester);
+    testWidgets('given My complaints, then the form opens via the FAB', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        overrides: [
+          complaintRepositoryProvider.overrideWithValue(
+            EmptyComplaintRepository(),
+          ),
+        ],
+      );
 
-      await tester.tap(find.text('Report an issue'));
+      await tester.tap(find.text('My complaints'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Report an issue'));
       await tester.pumpAndSettle();
 
       expect(find.text('Submit complaint'), findsOneWidget);

@@ -428,10 +428,10 @@ class _QuickActions extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _ActionTile(
-                label: 'Report an issue',
+                label: 'My complaints',
                 icon: Icons.warning_amber_rounded,
                 danger: true,
-                onTap: () => context.push(AppRoutes.newComplaint),
+                onTap: () => context.push(AppRoutes.complaints),
               ),
             ),
           ],
