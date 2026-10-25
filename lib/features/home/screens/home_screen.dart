@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/providers/clock_provider.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../data/models/pass.dart';
 import '../../../data/models/student.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -297,8 +296,7 @@ class _StatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'TONIGHT · ${formatDayMonth(now)} · ${formatTime(now)}'
-                .toUpperCase(),
+            "BULUGAHA GIRLS' HOSTEL · UNIVERSITY OF KELANIYA",
             style: TextStyle(
               fontFamily: AppFonts.mono,
               color: Colors.white.withValues(alpha: 0.55),
@@ -373,37 +371,21 @@ class _StatusCard extends StatelessWidget {
               ),
           ],
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(
-                Icons.schedule,
-                size: 14,
-                color: Colors.white.withValues(alpha: 0.6),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  curfewMessage(now),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 12,
-                  ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: onHistory,
+              child: Text(
+                'View history',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Colors.white.withValues(alpha: 0.5),
                 ),
               ),
-              GestureDetector(
-                onTap: onHistory,
-                child: Text(
-                  'View history',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
-                    decorationColor: Colors.white.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

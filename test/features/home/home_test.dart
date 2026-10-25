@@ -110,7 +110,7 @@ void main() {
   });
 
   group('Home dashboard', () {
-    testWidgets('given a signed-in student, then status and curfew show', (
+    testWidgets('given a signed-in student, then status and hostel show', (
       tester,
     ) async {
       await pumpApp(tester);
@@ -120,8 +120,10 @@ void main() {
       expect(find.text('SIGNED IN'), findsOneWidget);
       expect(find.text('You’re in Block C,'), findsOneWidget);
       expect(find.text('Room C-214.'), findsOneWidget);
-      expect(find.text('Curfew at 22:00 · in 46 min'), findsOneWidget);
-      expect(find.text('TONIGHT · SAT 18 APR · 21:14'), findsOneWidget);
+      expect(
+        find.text("BULUGAHA GIRLS' HOSTEL · UNIVERSITY OF KELANIYA"),
+        findsOneWidget,
+      );
     });
 
     testWidgets('given an active pass, then its card is shown', (tester) async {
