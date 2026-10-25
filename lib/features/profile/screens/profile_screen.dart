@@ -144,15 +144,31 @@ class _Hero extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.cyan, width: 3),
             ),
+            clipBehavior: Clip.antiAlias,
             alignment: Alignment.center,
-            child: Text(
-              student.initials,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            child: student.photoUrl != null
+                ? Image.network(
+                    student.photoUrl!,
+                    width: 88,
+                    height: 88,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Text(
+                      student.initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  )
+                : Text(
+                    student.initials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
           ),
           const SizedBox(height: 14),
           Text(

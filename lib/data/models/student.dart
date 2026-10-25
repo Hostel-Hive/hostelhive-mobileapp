@@ -32,6 +32,7 @@ class Student {
     this.guardianPhone,
     this.presence = PresenceStatus.inside,
     this.mustChangePassword = false,
+    this.photoUrl,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -89,6 +90,7 @@ class Student {
       guardianRelation: nonEmpty(guardian?['relationship']),
       guardianPhone: nonEmpty(guardian?['contact_phone']),
       presence: presenceFromString(presence),
+      photoUrl: nonEmpty(json['photo_url']),
     );
   }
 
@@ -108,6 +110,7 @@ class Student {
   final String? guardianPhone;
   final PresenceStatus presence;
   final bool mustChangePassword;
+  final String? photoUrl;
 
   String get firstName {
     final parts = fullName.trim().split(RegExp(r'\s+'));
@@ -147,7 +150,11 @@ class Student {
 
   bool get isInside => presence == PresenceStatus.inside;
 
-  Student copyWith({PresenceStatus? presence, bool? mustChangePassword}) {
+  Student copyWith({
+    PresenceStatus? presence,
+    bool? mustChangePassword,
+    String? photoUrl,
+  }) {
     return Student(
       studentId: studentId,
       indexNo: indexNo,
@@ -165,6 +172,7 @@ class Student {
       guardianPhone: guardianPhone,
       presence: presence ?? this.presence,
       mustChangePassword: mustChangePassword ?? this.mustChangePassword,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 }
