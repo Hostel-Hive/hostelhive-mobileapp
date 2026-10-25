@@ -232,30 +232,41 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('given the leave is confirmed, then the student shows as out', (
-      tester,
-    ) async {
-      await pumpApp(tester);
+    testWidgets(
+      'given the declaration is confirmed, then the student still shows as '
+      'signed in with a reminder to scan out',
+      (tester) async {
+        await pumpApp(tester);
 
-      await goHome(tester);
+        await goHome(tester);
 
-      expect(find.text('OUT'), findsOneWidget);
-      expect(find.text('You’re out of the hostel.'), findsOneWidget);
-      expect(find.text('SIGNED IN'), findsNothing);
-    });
+        // Declaring going home only records intent; only a gate scan moves
+        // the student OUT, so the badge must not jump ahead of that.
+        expect(find.text('SIGNED IN'), findsOneWidget);
+        expect(find.text('OUT'), findsNothing);
+        expect(find.textContaining('have not scanned out yet'), findsOneWidget);
+      },
+    );
 
-    testWidgets('given the student is already out, then they are told so', (
-      tester,
-    ) async {
-      await pumpApp(tester);
-      await goHome(tester);
+    testWidgets(
+      'given a declaration already exists, then confirming again is refused',
+      (tester) async {
+        await pumpApp(tester);
+        await goHome(tester);
 
-      await tester.tap(find.text('Going home'));
-      await tester.pump();
+        // Presence is still "inside", so the dashboard lets the student try
+        // again; the repository is what refuses the duplicate declaration.
+        await tester.tap(find.text('Going home'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Confirm going home'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('You are already marked as out.'), findsOneWidget);
-      expect(find.text('Confirm going home'), findsNothing);
-    });
+        expect(
+          find.text('You are already recorded as outside the hostel.'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 
   group('Tab navigation', () {

@@ -14,7 +14,6 @@ class ApiAuthRepository implements AuthRepository {
 
   final FirebaseAuthService _auth;
   final ApiClient _api;
-  String? _email;
   Student? _student;
 
   @override
@@ -73,17 +72,6 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> changeCurrentPassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    final email = _email;
-    if (email == null) throw const AuthException('Please sign in again.');
-    await _auth.reauthenticate(email: email, password: currentPassword);
-    await _auth.updatePassword(newPassword);
-  }
-
-  @override
   Future<Student> updateProfile({
     String? phone,
     String? guardianName,
@@ -118,7 +106,6 @@ class ApiAuthRepository implements AuthRepository {
       body: body,
     ) as Map<String, dynamic>;
     final student = Student.fromProfileJson(profile);
-    _email = student.email;
     _student = student;
     return student;
   }
@@ -168,7 +155,6 @@ class ApiAuthRepository implements AuthRepository {
       final profile =
           await _api.getJson('/me/student-profile') as Map<String, dynamic>;
       final student = Student.fromProfileJson(profile);
-      _email = student.email;
       _student = student;
       return student;
     } on ApiException catch (e) {

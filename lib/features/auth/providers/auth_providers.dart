@@ -8,6 +8,11 @@ import '../../../data/models/student.dart';
 import '../../../data/repositories/api_auth_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/exceptions.dart';
+import '../../attendance/providers/attendance_providers.dart';
+import '../../complaints/providers/complaint_providers.dart';
+import '../../inbox/providers/inbox_providers.dart';
+import '../../passes/providers/pass_providers.dart';
+import '../../qr/providers/qr_providers.dart';
 
 export '../../../data/api/api_providers.dart' show sessionStoreProvider;
 
@@ -74,6 +79,7 @@ class AuthController extends Notifier<AuthState> {
     return _run(() async {
       final student = await _repository.login(emailOrId, password);
       state = AuthState(status: AuthStatus.authenticated, student: student);
+      _clearPerStudentCaches();
     });
   }
 
@@ -83,18 +89,6 @@ class AuthController extends Notifier<AuthState> {
       final student = await _repository.changePassword(newPassword);
       state = AuthState(status: AuthStatus.authenticated, student: student);
     });
-  }
-
-  Future<String?> changeCurrentPassword({
-    required String currentPassword,
-    required String newPassword,
-  }) {
-    return _run(
-      () => _repository.changeCurrentPassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      ),
-    );
   }
 
   Future<String?> updateProfile({
@@ -150,6 +144,28 @@ class AuthController extends Notifier<AuthState> {
   Future<void> signOut() async {
     await _repository.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);
+    _clearPerStudentCaches();
+  }
+
+  /// Several feature providers (passes, complaints, inbox, attendance, QR)
+  /// cache the signed-in student's data for the life of the app and have no
+  /// way to notice a different student signing in on the same session, so
+  /// they must be invalidated explicitly here or a new sign-in would still
+  /// show the previous student's data.
+  void _clearPerStudentCaches() {
+    // Only invalidate providers that already have state. Invalidating one
+    // that was never watched would create it from scratch here, kicking off
+    // a fetch nobody asked for.
+    if (ref.exists(passesProvider)) ref.invalidate(passesProvider);
+    if (ref.exists(passQuotaProvider)) ref.invalidate(passQuotaProvider);
+    if (ref.exists(complaintsProvider)) ref.invalidate(complaintsProvider);
+    if (ref.exists(inboxProvider)) ref.invalidate(inboxProvider);
+    if (ref.exists(attendanceProvider)) ref.invalidate(attendanceProvider);
+    if (ref.exists(qrImageProvider)) ref.invalidate(qrImageProvider);
+    // profilePhotoProvider is not invalidated here: it already reacts to
+    // AuthState via ref.watch(authControllerProvider.select(...)), and
+    // invalidating it from inside AuthController itself is a circular
+    // dependency (it depends on this very provider).
   }
 
   Future<String?> _run(Future<void> Function() action) async {

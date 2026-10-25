@@ -11,8 +11,14 @@ import '../../../core/widgets/info_alert_box.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../providers/auth_providers.dart';
 
+/// Requests a Firebase password reset email. Also used as "Change password"
+/// for a signed-in student (FR006/UC002): Firebase has no endpoint to verify
+/// a typed current password against a bearer token, so the only trustworthy
+/// way to change it is the same emailed reset link used when signed out.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  const ForgotPasswordScreen({this.isChangePassword = false, super.key});
+
+  final bool isChangePassword;
 
   @override
   ConsumerState<ForgotPasswordScreen> createState() =>
@@ -21,9 +27,18 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController();
+  late final TextEditingController _email;
   bool _loading = false;
   String? _error;
+
+  bool get _isChange => widget.isChangePassword;
+
+  @override
+  void initState() {
+    super.initState();
+    final knownEmail = ref.read(authControllerProvider).student?.email;
+    _email = TextEditingController(text: _isChange ? knownEmail : null);
+  }
 
   @override
   void dispose() {
@@ -52,13 +67,19 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Reset link sent. Check your email to set a new password.',
+            _isChange
+                ? 'Reset link sent. Check your email to set your new password.'
+                : 'Reset link sent. Check your email to set a new password.',
           ),
         ),
       );
-    context.go(AppRoutes.login);
+    if (_isChange) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.login);
+    }
   }
 
   @override
@@ -78,7 +99,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     Row(
                       children: [
                         Tooltip(
-                          message: 'Back to sign in',
+                          message: _isChange ? 'Back' : 'Back to sign in',
                           child: InkWell(
                             borderRadius: BorderRadius.circular(12),
                             onTap: () => context.pop(),
@@ -98,9 +119,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Text(
-                          'Back to sign in',
-                          style: TextStyle(
+                        Text(
+                          _isChange ? 'Back' : 'Back to sign in',
+                          style: const TextStyle(
                             color: AppColors.muted,
                             fontSize: 14,
                           ),
@@ -128,9 +149,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               ),
                             ),
                             const SizedBox(height: 20),
-                            const Text(
-                              'Forgot',
-                              style: TextStyle(
+                            Text(
+                              _isChange ? 'Change' : 'Forgot',
+                              style: const TextStyle(
                                 color: AppColors.navy,
                                 fontSize: 34,
                                 fontWeight: FontWeight.w800,
@@ -138,9 +159,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                 letterSpacing: -0.8,
                               ),
                             ),
-                            const Text(
-                              'your password?',
-                              style: TextStyle(
+                            Text(
+                              _isChange ? 'your password' : 'your password?',
+                              style: const TextStyle(
                                 color: AppColors.cyan,
                                 fontSize: 34,
                                 fontWeight: FontWeight.w800,
@@ -155,6 +176,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                               labelColor: AppColors.navy,
                               hintText: 'you@stu.kln.ac.lk',
                               controller: _email,
+                              enabled: !_isChange,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.done,
                               onFieldSubmitted: (_) => _submit(),
@@ -174,9 +196,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             Center(
                               child: TextButton(
                                 onPressed: () => context.pop(),
-                                child: const Text(
-                                  'Try signing in again',
-                                  style: TextStyle(
+                                child: Text(
+                                  _isChange ? 'Cancel' : 'Try signing in again',
+                                  style: const TextStyle(
                                     color: AppColors.secondary,
                                     fontSize: 15,
                                     fontWeight: FontWeight.w500,
