@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Added
 - Attendance history screen: day-grouped IN/OUT gate-scan records with timestamps, current presence status badge, and a late-entry flag for unapproved scans (FR012-013, UC007-008). Accessible from the "View history" link on the Home status card.
 - Change password screen accessible from the Me tab (FR006, UC002): current password verification, new password strength meter, and an inline error for wrong current password.
+- Going home option added to the "Request a pass" form (UC009): replaces the retired Leave workflow (backend returns 410); selecting Going home shows a simplified confirmation with no date or reason fields, and records the declaration via `POST /going-home`. Quota card in the Passes screen is now hidden gracefully when the retired leave-allowance endpoint is unavailable.
 
 
 - Flutter project structure for Android and iOS with `flutter_lints` and a Riverpod-based placeholder home screen.
