@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/providers/auth_providers.dart';
-import '../../features/auth/screens/change_password_screen.dart';
 import '../../features/auth/screens/first_login_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
@@ -108,7 +107,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.changePassword,
-        builder: (context, state) => const ChangePasswordScreen(),
+        builder: (context, state) =>
+            const ForgotPasswordScreen(isChangePassword: true),
       ),
       GoRoute(
         path: AppRoutes.passwordChanged,

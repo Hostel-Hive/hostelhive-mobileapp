@@ -18,14 +18,6 @@ abstract class AuthRepository {
   /// First login: replaces the temporary password of the signed-in student.
   Future<Student> changePassword(String newPassword);
 
-  /// Authenticated password change (FR006/UC002).
-  ///
-  /// Verifies [currentPassword] before applying [newPassword].
-  Future<void> changeCurrentPassword({
-    required String currentPassword,
-    required String newPassword,
-  });
-
   /// Edits the student's own contact phone and/or guardian (SDS 2.2.7). Pass
   /// null to leave a field unchanged; the three guardian fields are
   /// all-or-nothing since the backend replaces the guardian as one record.
@@ -194,23 +186,6 @@ class MockAuthRepository implements AuthRepository {
     account.password = newPassword;
     account.student = account.student.copyWith(mustChangePassword: false);
     return account.student;
-  }
-
-  @override
-  Future<void> changeCurrentPassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    await _wait();
-    final account = await _signedIn();
-    if (account == null) throw const AuthException('Please sign in again.');
-    if (account.password != currentPassword) {
-      throw const AuthException('Current password is incorrect.');
-    }
-    if (!PasswordRules.of(newPassword).allMet) {
-      throw const AuthException('Choose a stronger password.');
-    }
-    account.password = newPassword;
   }
 
   @override

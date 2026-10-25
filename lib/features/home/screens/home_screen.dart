@@ -59,9 +59,14 @@ class HomeScreen extends ConsumerWidget {
     final now = ref.watch(clockProvider)();
     final passes = ref.watch(passesProvider).valueOrNull ?? const <Pass>[];
     final unread = ref.watch(unreadCountProvider);
-    final status = isOutsideOnLeave(passes)
-        ? PresenceStatus.outside
-        : student?.presence ?? PresenceStatus.unknown;
+    // The presence badge always reflects the backend's actual gate-scan
+    // status, never the declaration itself — a "Going home" confirmation
+    // only records intent and does not move the student OUT (SDS: only a
+    // gate scan does). When a declaration is still open and the student is
+    // still recorded as inside, a separate reminder nudges them to scan.
+    final status = student?.presence ?? PresenceStatus.unknown;
+    final pendingGoingHome =
+        status == PresenceStatus.inside && isOutsideOnLeave(passes);
     final active = activeRequest(passes, now);
 
     if (student == null) {
@@ -90,6 +95,10 @@ class HomeScreen extends ConsumerWidget {
                 status: status,
                 onHistory: () => context.push(AppRoutes.attendance),
               ),
+              if (pendingGoingHome) ...[
+                const SizedBox(height: 12),
+                _GoingHomeReminder(onScan: () => context.push(AppRoutes.qr)),
+              ],
               const SizedBox(height: 24),
               const _SectionTitle('Quick actions'),
               const SizedBox(height: 12),
@@ -204,6 +213,56 @@ class _Header extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Shown on Home when the student declared Going Home but is still recorded
+/// as inside — they have not scanned out at the gate yet.
+class _GoingHomeReminder extends StatelessWidget {
+  const _GoingHomeReminder({required this.onScan});
+
+  final VoidCallback onScan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.warningBg,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onScan,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.warningSoft),
+          ),
+          child: const Row(
+            children: [
+              Icon(
+                Icons.qr_code_scanner,
+                size: 20,
+                color: AppColors.warningDark,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'You declared Going Home but have not scanned out yet. '
+                  'Scan your QR at the gate when you leave.',
+                  style: TextStyle(
+                    color: AppColors.warningDark,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 18, color: AppColors.warningDark),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
