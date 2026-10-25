@@ -60,7 +60,8 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     }
 
     ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Password updated')));
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text('Password updated')));
     context.pop();
   }
 

@@ -502,6 +502,21 @@ void main() {
       expect(find.text('Hello, Sanuthi'), findsOneWidget);
     });
 
+    testWidgets(
+      'given Show my QR on the confirmation, then the QR screen opens',
+      (tester) async {
+        await pumpApp(tester);
+        await pushTo(tester, AppRoutes.goingHome);
+        await tester.tap(find.text('Confirm going home'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Show my QR'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(MyQrScreen), findsOneWidget);
+      },
+    );
+
     testWidgets('given the student is already out, then an error is shown', (
       tester,
     ) async {
