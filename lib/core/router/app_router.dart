@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/repositories/auth_repository.dart';
 import '../../features/auth/providers/auth_providers.dart';
 import '../../features/auth/screens/change_password_screen.dart';
 import '../../features/auth/screens/first_login_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/password_changed_screen.dart';
-import '../../features/auth/screens/reset_password_screen.dart';
 import '../../features/attendance/screens/attendance_screen.dart';
 import '../../features/complaints/screens/complaint_detail_screen.dart';
 import '../../features/complaints/screens/complaint_submitted_screen.dart';
@@ -35,7 +33,6 @@ class AppRoutes {
   static const login = '/login';
   static const firstLogin = '/first-login';
   static const forgotPassword = '/forgot-password';
-  static const resetPassword = '/reset-password';
   static const changePassword = '/change-password';
   static const passwordChanged = '/password-changed';
   static const home = '/home';
@@ -52,12 +49,7 @@ class AppRoutes {
   static const scanResult = '/scan-result';
 
   /// Screens a signed-out student may open.
-  static const publicRoutes = {
-    login,
-    forgotPassword,
-    resetPassword,
-    passwordChanged,
-  };
+  static const publicRoutes = {login, forgotPassword, passwordChanged};
 }
 
 /// Decides where a student must be sent for the current session.
@@ -111,14 +103,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.forgotPassword,
         builder: (context, state) => const ForgotPasswordScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.resetPassword,
-        builder: (context, state) => ResetPasswordScreen(
-          token:
-              state.uri.queryParameters['token'] ??
-              MockAuthRepository.demoResetToken,
-        ),
       ),
       GoRoute(
         path: AppRoutes.changePassword,

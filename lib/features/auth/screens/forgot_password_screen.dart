@@ -9,7 +9,6 @@ import '../../../core/widgets/app_text_field.dart';
 import '../../../core/widgets/error_banner.dart';
 import '../../../core/widgets/info_alert_box.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../data/repositories/auth_repository.dart';
 import '../providers/auth_providers.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -51,13 +50,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (error != null) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reset link sent. Check your email.')),
+      const SnackBar(
+        content: Text(
+          'Reset link sent. Check your email to set a new password.',
+        ),
+      ),
     );
-    // Production opens this screen from the emailed link; the demo token
-    // lets the flow be walked through without a mail server.
-    context.push(
-      '${AppRoutes.resetPassword}?token=${MockAuthRepository.demoResetToken}',
-    );
+    context.go(AppRoutes.login);
   }
 
   @override
