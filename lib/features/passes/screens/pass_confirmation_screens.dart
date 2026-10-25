@@ -34,7 +34,8 @@ class LateAccessSubmittedScreen extends ConsumerWidget {
   }
 }
 
-/// Shown after "Going home" has been recorded.
+/// Shown after "Going home" has been recorded. The student still needs to
+/// scan out at the gate, so the QR is one tap away instead of buried in Me.
 class GoingHomeRecordedScreen extends StatelessWidget {
   const GoingHomeRecordedScreen({super.key});
 
@@ -44,10 +45,12 @@ class GoingHomeRecordedScreen extends StatelessWidget {
       title: 'Going home recorded',
       subtitle: 'Safe travels! Your declaration is recorded.',
       description:
-          'Scan your ID card at the gate when you leave and your status '
+          'Scan your QR at the gate when you leave and your status '
           'becomes OUT. Scan again when you return.',
-      primaryLabel: 'Back to Home',
-      onPrimaryPressed: () => context.go(AppRoutes.home),
+      primaryLabel: 'Show my QR',
+      onPrimaryPressed: () => context.pushReplacement(AppRoutes.qr),
+      secondaryLabel: 'Back to Home',
+      onSecondaryPressed: () => context.go(AppRoutes.home),
     );
   }
 }

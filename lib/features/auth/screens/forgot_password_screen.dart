@@ -49,13 +49,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
     if (error != null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Reset link sent. Check your email to set a new password.',
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Reset link sent. Check your email to set a new password.',
+          ),
         ),
-      ),
-    );
+      );
     context.go(AppRoutes.login);
   }
 
