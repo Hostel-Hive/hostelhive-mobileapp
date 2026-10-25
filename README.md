@@ -4,7 +4,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-%E2%89%A580%25%20gate-brightgreen)](.github/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/Hostel-Hive/hostelhive-mobileapp)](https://github.com/Hostel-Hive/hostelhive-mobileapp/releases)
 
-Student mobile application for **HostelHive**, the hostel management system of Bulugaha Girls' Hostel, University of Kelaniya. Built with Flutter (SRS 2.4, Technological Constraints).
+Student mobile application for **HostelHive**, an open-source hostel management system built as a capstone project at the University of Kelaniya. Built with Flutter (SRS 2.4, Technological Constraints).
 
 The wider project (backend, web dashboard, hardware, infrastructure, documents) lives in the [Hostel-Hive](https://github.com/Hostel-Hive) organisation.
 
