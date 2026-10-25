@@ -5,11 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-25
+
 ### Added
 - Attendance history screen: day-grouped IN/OUT gate-scan records with timestamps, current presence status badge, and a late-entry flag for unapproved scans (FR012-013, UC007-008). Accessible from the "View history" link on the Home status card.
-- Change password screen accessible from the Me tab (FR006, UC002): current password verification, new password strength meter, and an inline error for wrong current password.
 - Going home option added to the "Request a pass" form (UC009): replaces the retired Leave workflow (backend returns 410); selecting Going home shows a simplified confirmation with no date or reason fields, and records the declaration via `POST /going-home`. Quota card in the Passes screen is now hidden gracefully when the retired leave-allowance endpoint is unavailable.
-
+- Edit profile screen (Me tab) for contact phone and guardian details, backed by `PATCH /me/student-profile`.
+- Profile photo upload and removal via `PUT`/`DELETE /me/student-profile/image`; the photo now shows consistently in both the Me and Home headers via a shared `StudentAvatar` widget.
+- A reminder banner on Home when a Going Home declaration is still open and the student has not yet scanned out at the gate.
 
 - Flutter project structure for Android and iOS with `flutter_lints` and a Riverpod-based placeholder home screen.
 - GitHub Actions CI pipeline (format, analyze, tests with an 80% coverage gate, APK build, dependency scan).
@@ -39,7 +42,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - Complaints no longer have a title or severity, and the categories are Maintenance and Disciplinary, to match the backend.
 - The request form is now "Request a pass" with a Leave or Late access choice; purpose and destination were removed because the backend does not store them.
 - Students sign in with their university email only; the Student ID login was removed.
+- Change password (Me tab) now reuses the same emailed reset-link flow as Forgot Password, with the email prefilled and locked, instead of a current/new/confirm form: Firebase has no endpoint to verify a typed current password against a bearer token.
+- Going Home's confirmation screen leads straight to "Show my QR" instead of "Back to Home", since scanning out at the gate is the actual next step.
+- The in-app "set a new password" screen was removed; passwords are now always chosen on Firebase's own page from the emailed link.
 
 ### Fixed
 - Hero cards on Home, Me and first sign-in rendered pale blue on devices instead of navy with a subtle glow.
 - A student account without a student profile now gets a clear message at sign in instead of a generic error.
+- Cancelling a pass always failed: the retired ordinary-leave workflow answers 410 instead of 404, so the fallback to the late-access cancel endpoint never ran.
+- The attendance screen called a backend endpoint that does not exist, so it always showed "Could not load attendance" even with no real error; it now combines `/me/student-profile` and `/me/attendance/events`.
+- The profile photo feature read the wrong JSON field (`photo_url` instead of `profile_image_url`), so it never showed against the real backend; the photo is also private and is now fetched with the student's token like complaint photos.
+- Passes, complaints, inbox and attendance could leak from one signed-in student to the next on the same device, because several providers cached data for the life of the app and never reset on sign in/out.
+- Going Home's presence badge jumped to "OUT" the moment a declaration was confirmed, even before the student scanned out at the gate; it now always reflects the backend's real presence, with a separate reminder banner while a declaration is open.
+- A stale snackbar from Forgot Password could still be showing after navigating to an unrelated screen, since `ScaffoldMessenger` is shared app-wide.
+- The Home tab header avatar never showed the uploaded profile photo, only initials, unlike the Me tab.
