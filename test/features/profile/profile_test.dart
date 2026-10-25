@@ -8,19 +8,19 @@ import '../../helpers/harness.dart';
 
 void main() {
   group('Student.fromProfileJson', () {
-    test('given photo_url is present, then photoUrl is set', () {
+    test('given profile_image_url is present, then hasPhoto is true', () {
       final student = Student.fromProfileJson({
         'student_id': 'STU-0001',
         'index_no': 'SE/2021/001',
         'full_name': 'Test Student',
         'email': 'test@example.com',
-        'photo_url': 'https://cdn.example.com/photos/STU-0001.jpg',
+        'profile_image_url': '/me/student-profile/image',
       });
 
-      expect(student.photoUrl, 'https://cdn.example.com/photos/STU-0001.jpg');
+      expect(student.hasPhoto, isTrue);
     });
 
-    test('given photo_url is absent, then photoUrl is null', () {
+    test('given profile_image_url is absent, then hasPhoto is false', () {
       final student = Student.fromProfileJson({
         'student_id': 'STU-0001',
         'index_no': 'SE/2021/001',
@@ -28,20 +28,23 @@ void main() {
         'email': 'test@example.com',
       });
 
-      expect(student.photoUrl, isNull);
+      expect(student.hasPhoto, isFalse);
     });
 
-    test('given photo_url is empty string, then photoUrl is null', () {
-      final student = Student.fromProfileJson({
-        'student_id': 'STU-0001',
-        'index_no': 'SE/2021/001',
-        'full_name': 'Test Student',
-        'email': 'test@example.com',
-        'photo_url': '',
-      });
+    test(
+      'given profile_image_url is an empty string, then hasPhoto is false',
+      () {
+        final student = Student.fromProfileJson({
+          'student_id': 'STU-0001',
+          'index_no': 'SE/2021/001',
+          'full_name': 'Test Student',
+          'email': 'test@example.com',
+          'profile_image_url': '',
+        });
 
-      expect(student.photoUrl, isNull);
-    });
+        expect(student.hasPhoto, isFalse);
+      },
+    );
   });
 
   group('Profile screen', () {

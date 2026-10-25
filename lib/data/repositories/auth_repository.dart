@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../core/utils/password_strength.dart';
 import '../models/student.dart';
 import 'exceptions.dart';
@@ -34,6 +36,20 @@ abstract class AuthRepository {
     String? guardianPhone,
   });
 
+  /// Downloads the student's own private profile photo, fetched with their
+  /// token since it is not a public URL.
+  Future<Uint8List> fetchProfilePhoto();
+
+  /// Uploads or replaces the student's own profile photo. [contentType] is
+  /// `image/jpeg` or `image/png`.
+  Future<Student> uploadProfilePhoto({
+    required Uint8List bytes,
+    required String contentType,
+  });
+
+  /// Removes the student's own profile photo, if any.
+  Future<Student> removeProfilePhoto();
+
   Future<void> logout();
   Future<Student?> currentUser();
 }
@@ -43,6 +59,7 @@ class _Account {
 
   Student student;
   String password;
+  Uint8List? photo;
 }
 
 /// In-memory implementation used until the Go backend API is available.
@@ -212,6 +229,41 @@ class MockAuthRepository implements AuthRepository {
       guardianRelation: guardianRelation,
       guardianPhone: guardianPhone,
     );
+    return account.student;
+  }
+
+  @override
+  Future<Uint8List> fetchProfilePhoto() async {
+    await _wait();
+    final account = await _signedIn();
+    if (account == null) throw const AuthException('Please sign in again.');
+    final photo = account.photo;
+    if (photo == null) {
+      throw const RepositoryException('No profile photo yet.');
+    }
+    return photo;
+  }
+
+  @override
+  Future<Student> uploadProfilePhoto({
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    await _wait();
+    final account = await _signedIn();
+    if (account == null) throw const AuthException('Please sign in again.');
+    account.photo = bytes;
+    account.student = account.student.copyWith(hasPhoto: true);
+    return account.student;
+  }
+
+  @override
+  Future<Student> removeProfilePhoto() async {
+    await _wait();
+    final account = await _signedIn();
+    if (account == null) throw const AuthException('Please sign in again.');
+    account.photo = null;
+    account.student = account.student.copyWith(hasPhoto: false);
     return account.student;
   }
 

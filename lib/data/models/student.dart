@@ -32,7 +32,7 @@ class Student {
     this.guardianPhone,
     this.presence = PresenceStatus.inside,
     this.mustChangePassword = false,
-    this.photoUrl,
+    this.hasPhoto = false,
   });
 
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -90,7 +90,7 @@ class Student {
       guardianRelation: nonEmpty(guardian?['relationship']),
       guardianPhone: nonEmpty(guardian?['contact_phone']),
       presence: presenceFromString(presence),
-      photoUrl: nonEmpty(json['photo_url']),
+      hasPhoto: nonEmpty(json['profile_image_url']) != null,
     );
   }
 
@@ -110,7 +110,11 @@ class Student {
   final String? guardianPhone;
   final PresenceStatus presence;
   final bool mustChangePassword;
-  final String? photoUrl;
+
+  /// Whether the backend has a private profile photo; the bytes are
+  /// fetched separately from `GET /me/student-profile/image` with the
+  /// student's token, never from a public URL.
+  final bool hasPhoto;
 
   String get firstName {
     final parts = fullName.trim().split(RegExp(r'\s+'));
@@ -153,7 +157,7 @@ class Student {
   Student copyWith({
     PresenceStatus? presence,
     bool? mustChangePassword,
-    String? photoUrl,
+    bool? hasPhoto,
     String? phone,
     String? guardianName,
     String? guardianRelation,
@@ -176,7 +180,7 @@ class Student {
       guardianPhone: guardianPhone ?? this.guardianPhone,
       presence: presence ?? this.presence,
       mustChangePassword: mustChangePassword ?? this.mustChangePassword,
-      photoUrl: photoUrl ?? this.photoUrl,
+      hasPhoto: hasPhoto ?? this.hasPhoto,
     );
   }
 }

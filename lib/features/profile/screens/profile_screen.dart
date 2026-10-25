@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/student.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../complaints/services/image_picker_service.dart';
 
 /// The Me tab: the student's details and sign out (FR007).
 class ProfileScreen extends ConsumerWidget {
@@ -121,14 +124,104 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _Hero extends StatelessWidget {
+class _Hero extends ConsumerStatefulWidget {
   const _Hero({required this.student, required this.onShowQr});
 
   final Student student;
   final VoidCallback onShowQr;
 
   @override
+  ConsumerState<_Hero> createState() => _HeroState();
+}
+
+class _HeroState extends ConsumerState<_Hero> {
+  bool _working = false;
+
+  Future<void> _changePhoto() async {
+    final choice = await showModalBottomSheet<_PhotoChoice>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take a photo'),
+              onTap: () => Navigator.of(context).pop(_PhotoChoice.fromCamera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.of(context).pop(_PhotoChoice.fromGallery),
+            ),
+            if (widget.student.hasPhoto)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text(
+                  'Remove photo',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () => Navigator.of(context).pop(_PhotoChoice.remove),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+
+    if (choice == _PhotoChoice.remove) {
+      await _run(
+        () => ref.read(authControllerProvider.notifier).removeProfilePhoto(),
+      );
+      return;
+    }
+
+    final picked = await ref
+        .read(imagePickerServiceProvider)
+        .pick(
+          choice == _PhotoChoice.fromCamera
+              ? PhotoSource.camera
+              : PhotoSource.gallery,
+        );
+    if (picked == null || !mounted) return;
+
+    final problem = validateComplaintImage(
+      path: picked.path,
+      sizeBytes: picked.sizeBytes,
+    );
+    if (problem != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(problem)));
+      return;
+    }
+
+    final bytes = await File(picked.path).readAsBytes();
+    final contentType = picked.path.toLowerCase().endsWith('.png')
+        ? 'image/png'
+        : 'image/jpeg';
+    await _run(
+      () => ref
+          .read(authControllerProvider.notifier)
+          .uploadProfilePhoto(bytes: bytes, contentType: contentType),
+    );
+  }
+
+  Future<void> _run(Future<String?> Function() action) async {
+    setState(() => _working = true);
+    final error = await action();
+    if (!mounted) return;
+    setState(() => _working = false);
+    if (error != null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final student = widget.student;
+    final photo = ref.watch(profilePhotoProvider);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -142,23 +235,32 @@ class _Hero extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.cyan, width: 3),
-            ),
-            clipBehavior: Clip.antiAlias,
-            alignment: Alignment.center,
-            child: student.photoUrl != null
-                ? Image.network(
-                    student.photoUrl!,
-                    width: 88,
-                    height: 88,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Text(
+          InkWell(
+            onTap: _working ? null : _changePhoto,
+            customBorder: const CircleBorder(),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.cyan, width: 3),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  alignment: Alignment.center,
+                  child: photo.when(
+                    loading: () => const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    ),
+                    error: (_, _) => Text(
                       student.initials,
                       style: const TextStyle(
                         color: Colors.white,
@@ -166,15 +268,69 @@ class _Hero extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                  )
-                : Text(
-                    student.initials,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
+                    data: (bytes) => bytes == null
+                        ? Text(
+                            student.initials,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          )
+                        : Image.memory(
+                            bytes,
+                            width: 88,
+                            height: 88,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Text(
+                              student.initials,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+                if (_working)
+                  Container(
+                    width: 88,
+                    height: 88,
+                    decoration: const BoxDecoration(
+                      color: Colors.black38,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: const BoxDecoration(
+                      color: AppColors.cyan,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           Text(
@@ -228,7 +384,7 @@ class _Hero extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: onShowQr,
+              onTap: widget.onShowQr,
               child: const SizedBox(
                 width: double.infinity,
                 height: 48,
@@ -250,6 +406,8 @@ class _Hero extends StatelessWidget {
     );
   }
 }
+
+enum _PhotoChoice { fromCamera, fromGallery, remove }
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
