@@ -49,6 +49,7 @@ app.*.map.json
 
 # Environment & secrets
 .env
+.env.json
 *.jks
 *.keystore
 key.properties
