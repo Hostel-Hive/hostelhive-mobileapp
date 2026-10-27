@@ -13,6 +13,16 @@ The wider project (backend, web dashboard, hardware, infrastructure, documents) 
 - Android Studio or Xcode for emulators and device builds
 - Android 10 or later (NFR013)
 
+### Environment variables
+Set in `.env` (copied from `.env.example`, never committed):
+
+| Variable | Description |
+|---|---|
+| `API_BASE_URL` | Base URL of the deployed HostelHive backend API |
+| `FIREBASE_API_KEY` | Firebase web API key, used for authentication |
+
+If unset, the app falls back to built-in demo data.
+
 ## Setup
 1. Clone the repository and switch to `develop`:
    ```
@@ -49,8 +59,12 @@ lib/
 test/          unit and widget tests
 ```
 
-## Releases
-Tagged releases (`main`) are published under [Releases](https://github.com/Hostel-Hive/hostelhive-mobileapp/releases), each with a downloadable APK built against the real backend. See [CHANGELOG.md](CHANGELOG.md) for what changed in each version.
+## Demo Account
+- Email: `thagyakavindi@gmail.com`
+- Password: `Kavindithagya2021`
+
+## Deployed Application
+As a mobile client, HostelHive has no hosted URL. The deployed build is the installable APK: latest tagged release at [Releases](https://github.com/Hostel-Hive/hostelhive-mobileapp/releases), built against the live backend. See [CHANGELOG.md](CHANGELOG.md) for what changed in each version.
 
 ## Documentation
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the branching strategy and commit conventions, and [CHANGELOG.md](CHANGELOG.md) for release notes.
