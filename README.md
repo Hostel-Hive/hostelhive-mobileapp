@@ -39,7 +39,7 @@ If unset, the app falls back to built-in demo data.
    flutter pub get
    flutter run --dart-define-from-file=.env
    ```
-   Without `.env` the app runs on built-in demo data (`sanuthi.p@stu.kln.ac.lk` / `Hostel@123`). Students sign in with their university email.
+   Without `.env` the app runs on built-in demo data. Students sign in with their university email.
 
 ## Quality checks
 ```
