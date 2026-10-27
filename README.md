@@ -61,7 +61,7 @@ test/          unit and widget tests
 
 ## Demo Account
 - Email: `thagyakavindi@gmail.com`
-- Password: `Kavindithagya2021`
+- Password: `KavindiThagya2021`
 
 ## Deployed Application
 As a mobile client, HostelHive has no hosted URL. The deployed build is the installable APK: latest tagged release at [Releases](https://github.com/Hostel-Hive/hostelhive-mobileapp/releases), built against the live backend. See [CHANGELOG.md](CHANGELOG.md) for what changed in each version.
